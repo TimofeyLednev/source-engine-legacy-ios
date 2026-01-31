@@ -5035,7 +5035,7 @@ CSysModule *CBaseFileSystem::LoadModule( const char *pFileName, const char *pPat
 	CSysModule *pModule = NULL;
 
 	LogFileAccess( pFileName );
-	if ( !pPathID )
+	if ( !pPathID || !Q_strcmp(pPathID, "GAMEBIN") )
 	{
 		pPathID = "EXECUTABLE_PATH"; // default to the bin dir
 	}
@@ -5046,7 +5046,7 @@ CSysModule *CBaseFileSystem::LoadModule( const char *pFileName, const char *pPat
 	CUtlSymbol lookup = g_PathIDTable.AddString( pPathID );
 
 	// a pathID has been specified, find the first match in the path list
-#ifndef ANDROID
+#if !ANDROID || !IOS
 	int c = m_SearchPaths.Count();
 	for ( int i = 0; i < c; i++ )
 	{

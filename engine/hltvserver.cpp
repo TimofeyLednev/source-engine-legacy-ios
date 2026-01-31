@@ -2068,7 +2068,7 @@ void CHLTVServer::ReplyInfo( const netadr_t &adr )
 
 #if defined(_WIN32)
 	buf.PutUnsignedChar( 'w' );
-#elif defined(OSX)
+#elif defined(APPLE)
 	buf.PutUnsignedChar( 'm' );
 #else // LINUX?
 	buf.PutUnsignedChar( 'l' );

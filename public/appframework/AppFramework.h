@@ -54,7 +54,7 @@ void AppShutdown( CAppSystemGroup *pAppSystemGroup );
 	{																							\
 		return AppMain( hInstance, hPrevInstance, lpCmdLine, nCmdShow, &_globalVarName );		\
 	}
-#elif defined( OSX )
+#elif defined( APPLE )
 #define DEFINE_WINDOWED_APPLICATION_OBJECT_GLOBALVAR( _globalVarName ) \
 	int main( int argc, char **argv )										\
 	{																							\

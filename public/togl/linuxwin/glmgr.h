@@ -34,7 +34,7 @@
 #pragma once
 
 #undef HAVE_GL_ARB_SYNC
-#ifndef OSX
+#ifndef APPLE
 #define HAVE_GL_ARB_SYNC 1
 #endif
 
@@ -1205,7 +1205,7 @@ public:
 };
 
 //===========================================================================//
-#ifndef OSX
+#ifndef APPLE
 
 #ifndef GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD
 #define GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD 0x9160
@@ -1329,7 +1329,7 @@ private:
 	GLsync m_nSyncObj;
 #endif
 };
-#endif // !OSX
+#endif // !APPLE
 
 //===========================================================================//
 
@@ -1654,7 +1654,7 @@ class GLMContext
 		void GenDebugFontTex( void );
 		void DrawDebugText( float x, float y, float z, float drawCharWidth, float drawCharHeight, char *string );
 
-#ifndef OSX
+#ifndef APPLE
 		CPinnedMemoryBuffer *GetCurPinnedMemoryBuffer( ) { return &m_PinnedMemoryBuffers[m_nCurPinnedMemoryBuffer]; }
 #endif
 
@@ -1794,7 +1794,7 @@ class GLMContext
 		CGLMProgram						*m_preload3DTexFragmentProgram;
 		CGLMProgram						*m_preloadCubeTexFragmentProgram;
 
-#if defined( OSX ) && defined( GLMDEBUG )
+#if defined( APPLE ) && defined( GLMDEBUG )
 		CGLMProgram						*m_boundProgram[ kGLMNumProgramTypes ];
 #endif
 
@@ -1859,7 +1859,7 @@ class GLMContext
 		GLuint							m_destroyPBO;
 		CUtlVector< TextureEntry_t >	m_availableTextures;
 
-#ifndef OSX
+#ifndef APPLE
 		enum { cNumPinnedMemoryBuffers = 4 };
 		CPinnedMemoryBuffer m_PinnedMemoryBuffers[cNumPinnedMemoryBuffers];
 		uint m_nCurPinnedMemoryBuffer;
@@ -2010,7 +2010,11 @@ FORCEINLINE void GLMContext::DrawRangeElements(	GLenum mode, GLuint start, GLuin
 
 	if ( m_pBoundPair )
 	{
+		#ifndef ANGLE
 		gGL->glDrawRangeElementsBaseVertex( mode, start, end, count, type, indicesActual, baseVertex );
+		#else
+		gGL->glDrawRangeElementsBaseVertexOES( mode, start, end, count, type, indicesActual, baseVertex );
+		#endif
 
 #if GLMDEBUG
 		if ( m_slowCheckEnable )

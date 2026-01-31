@@ -306,6 +306,7 @@ public:
 	int m_nOpenGLVersionMinor;  // if GL_VERSION is 2.1.0, this will be set to 1.
 	int m_nOpenGLVersionPatch;  // if GL_VERSION is 2.1.0, this will be set to 0.
 	bool m_bHave_OpenGL;
+	unsigned int m_nSystemFramebufferID = 0; 
 
 	char *m_pGLDriverStrings[cGLTotalDriverStrings];
 	GLDriverProvider_t m_nDriverProvider;

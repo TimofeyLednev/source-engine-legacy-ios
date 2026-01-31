@@ -25,8 +25,10 @@ def build(bld):
 			'sdlmgr.cpp'
 		]
 
-	if bld.env.DEST_OS == 'darwin' and bld.env.GL:
+	if bld.env.DEST_OS == 'darwin' and bld.env.GL and not bld.env.IOS:
 		source += ['glmrendererinfo_osx.mm']
+	if bld.env.IOS:
+		source += ['glmrendererinfo_ios.mm']
 
 
 	if bld.env.DEST_OS == 'win32':
@@ -50,8 +52,10 @@ def build(bld):
 
 	libs = []
 
-	if bld.env.DEST_OS == 'darwin':
+	if bld.env.DEST_OS == 'darwin' and not bld.env.IOS:
 		libs += ['FOUNDATION', 'APPKIT', 'IOKIT']
+	elif bld.env.IOS:
+		libs += ['FOUNDATION', 'UIKIT', 'IOKIT', 'OPENGLES']
 
 	bld.stlib(
 		source   = source,

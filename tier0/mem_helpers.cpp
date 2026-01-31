@@ -7,7 +7,7 @@
 #include "pch_tier0.h"
 #include "mem_helpers.h"
 #include <string.h>
-#ifdef OSX
+#ifdef APPLE
 #include <malloc/malloc.h>
 #else
 #include <malloc.h>

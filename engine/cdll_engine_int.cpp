@@ -1724,7 +1724,7 @@ bool ClientDLL_Load()
 		Host_AllowLoadModule( "client.dll","GAMEBIN", true );
 	}
 
-	g_ClientDLLModule = g_pFileSystem->LoadModule( "client", "GAMEBIN", false );
+	g_ClientDLLModule = g_pFileSystem->LoadModule( "client.dylib", "GAMEBIN", false );
 	if ( g_ClientDLLModule )
 	{
 		g_ClientFactory = Sys_GetFactory( g_ClientDLLModule );

@@ -36,6 +36,8 @@ IVoiceRecord* CreateVoiceRecord_DSound(int sampleRate) { return new VoiceRecord_
 #ifdef OSX
 #include <Carbon/Carbon.h>
 #include <OpenAL/al.h>
+#elif IOS
+#include <OpenAL/al.h>
 #else
 #include <AL/al.h>
 #endif

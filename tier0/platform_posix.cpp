@@ -16,7 +16,7 @@
 #include <sys/resource.h>
 #include <unistd.h>
 
-#if defined(OSX) || defined(PLATFORM_BSD)
+#if defined(APPLE) || defined(PLATFORM_BSD)
 # ifdef PLATFORM_BSD
 #  include <sys/proc.h>
 #  include <sys/user.h>
@@ -246,7 +246,7 @@ double Plat_FloatTime()
 		return g_FakeBenchmarkTime;
 	}
 	
-#ifdef OSX
+#ifdef APPLE
 	// OSX
 	static uint64 start_time = 0;
 	static mach_timebase_info_data_t    sTimebaseInfo;
@@ -441,7 +441,7 @@ PLATFORM_INTERFACE void Plat_SetAllocErrorFn( Plat_AllocErrorFn fn )
 
 #endif // !NO_HOOK_MALLOC
 
-#if defined( OSX ) || defined(PLATFORM_BSD)
+#if defined( APPLE ) || defined(PLATFORM_BSD)
 
 // From the Apple tech note: http://developer.apple.com/library/mac/#qa/qa1361/_index.html
 bool Plat_IsInDebugSession()
@@ -559,7 +559,7 @@ PLATFORM_INTERFACE const char *Plat_GetCommandLineA()
 
 PLATFORM_INTERFACE bool GetMemoryInformation( MemoryInformation *pOutMemoryInfo )
 {
-	#if defined( LINUX ) || defined( OSX ) || defined(PLATFORM_BSD)
+	#if defined( LINUX ) || defined( APPLE ) || defined(PLATFORM_BSD)
 		return false;
 	#else
 		#error "Need to fill out GetMemoryInformation or at least return false for this platform"
@@ -569,7 +569,7 @@ PLATFORM_INTERFACE bool GetMemoryInformation( MemoryInformation *pOutMemoryInfo 
 
 PLATFORM_INTERFACE bool Is64BitOS()
 {
-#if defined OSX
+#if defined APPLE
 	return true;
 #elif defined(LINUX) || defined(PLATFORM_BSD)
 	FILE *pp = popen( "uname -m", "r" );
@@ -671,7 +671,7 @@ PLATFORM_INTERFACE void Plat_SetWatchdogHandlerFunction( Plat_WatchDogHandlerFun
 // memory logging this functionality is portable code, except for the way in which it hooks
 // malloc/free. glibc contains the ability for the app to install hooks into malloc/free.
 
-#ifdef OSX
+#ifdef APPLE
 #include <malloc/malloc.h>
 #else
 #include <malloc.h>
@@ -781,7 +781,7 @@ static void InstallHooks( void )
 	__realloc_hook = ReallocHook;
 
 }
-#elif OSX || PLATFORM_BSD
+#elif APPLE || PLATFORM_BSD
 
 
 static void RemoveHooks( void )

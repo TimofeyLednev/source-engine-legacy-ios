@@ -63,7 +63,7 @@ struct GLMDisplayModeInfoFields
 
 struct GLMDisplayInfoFields
 {
-#ifdef OSX
+#ifdef APPLE
 	CGDirectDisplayID				m_cgDisplayID;
 	CGOpenGLDisplayMask				m_glDisplayMask;		// result of CGDisplayIDToOpenGLDisplayMask on the cg_displayID.
 #endif

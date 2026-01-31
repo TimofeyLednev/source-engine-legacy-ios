@@ -38,6 +38,8 @@
 #ifdef CGLPROFILER_ENABLE
 #include <OpenGL/CGLProfilerFunctionEnum.h>
 #endif
+#elif IOS
+#include <OpenGLES/gltypes.h>
 #endif
 
 #include "tier0/valve_minmax_off.h"
@@ -2858,7 +2860,7 @@ void	GLMStringOut( char *string )
 int		g_glm_indent = 0;
 int		g_glm_indent_max = 40;		// 40 tabs max
 
-#ifndef OSX
+#ifndef APPLE
 const char *strnstr( const char *haystack, const char *needle, int len )
 {
 	return strstr( haystack, needle );
@@ -3718,7 +3720,7 @@ void GLMGPUTimestampManagerTick()
 	g_GPUTimestampManager.Tick();
 }
 
-#endif // !OSX
+#endif // !APPLE
 
 static uint g_nPIXEventIndex;
 
@@ -3822,7 +3824,7 @@ float	GLMKnob( char *knobname, float *setvalue )
 		g_knobMap->SetLessFunc( LessFunc_GLMKnobKey );
 	}
 	
-#ifdef OSX
+#ifdef APPLE
 	uint mods = GetCurrentKeyModifiers();
 #else
 	uint mods = 0;
@@ -4149,7 +4151,9 @@ void	CGLMFileMirror::OpenInEditor( bool foreground )
 	
 	// pass -b if no desire to bring editor to foreground
 	sprintf(temp,"/usr/bin/bbedit %s %s", foreground ? "" : "-b", m_path );
+	#ifndef IOS
 	system( temp );
+	#endif
 }
 
 

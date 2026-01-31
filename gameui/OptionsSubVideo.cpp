@@ -1048,7 +1048,7 @@ COptionsSubVideo::COptionsSubVideo(vgui::Panel *parent) : PropertyPage(parent, N
 	unicodeText = g_pVGuiLocalize->Find("#GameUI_AspectWide16x10");
 	g_pVGuiLocalize->ConvertUnicodeToANSI(unicodeText, pszAspectName[2], 32);
 
-#ifndef ANDROID
+#if !ANDROID || !IOS
 	int iNormalItemID = m_pAspectRatio->AddItem( pszAspectName[0], NULL );
 	int i16x9ItemID = m_pAspectRatio->AddItem( pszAspectName[1], NULL );
 	int i16x10ItemID = m_pAspectRatio->AddItem( pszAspectName[2], NULL );
@@ -1124,7 +1124,7 @@ COptionsSubVideo::COptionsSubVideo(vgui::Panel *parent) : PropertyPage(parent, N
 	m_pWindowed->AddItem( "#GameUI_Windowed", NULL );
 #endif
 
-#ifdef ANDROID
+#if ANDROID || IOS
 	m_pWindowed->SetEnabled( false );
 #endif
 
@@ -1178,7 +1178,7 @@ void COptionsSubVideo::PrepareResolutionList()
 
 	// Clean up before filling the info again.
 	m_pMode->DeleteAllItems();
-#ifndef ANDROID
+#if !ANDROID || !IOS
 	m_pAspectRatio->SetItemEnabled(1, false);
 	m_pAspectRatio->SetItemEnabled(2, false);
 #endif
@@ -1246,7 +1246,7 @@ void COptionsSubVideo::PrepareResolutionList()
 		int itemID = -1;
 
 		int iAspectMode = GetScreenAspectMode( plist->width, plist->height );
-#ifndef ANDROID
+#if !ANDROID || !IOS
 		if ( iAspectMode > 0 )
 		{
 			m_pAspectRatio->SetItemEnabled( iAspectMode, true );
@@ -1278,7 +1278,7 @@ void COptionsSubVideo::PrepareResolutionList()
 	}
 
 	// disable ratio selection if we can't display widescreen.
-#ifndef ANDROID
+#if !ANDROID || !IOS
 	m_pAspectRatio->SetEnabled( bFoundWidescreen );
 #endif
 
@@ -1407,7 +1407,7 @@ void COptionsSubVideo::OnResetData()
 #endif
 
 	// reset gamma control
-#ifdef ANDROID
+#if ANDROID || IOS
 	m_pGammaButton->SetEnabled( false );
 #else
 	m_pGammaButton->SetEnabled( !config.Windowed() );
@@ -1611,7 +1611,7 @@ void COptionsSubVideo::PerformLayout()
 
 	if ( m_pGammaButton )
 	{
-#ifdef ANDROID
+#if ANDROID || IOS
 		m_pGammaButton->SetEnabled( false );
 #else
 		const MaterialSystem_Config_t &config = materials->GetCurrentConfigForVideoCard();
@@ -1638,7 +1638,7 @@ void COptionsSubVideo::OnTextChanged(Panel *pPanel, const char *pszText)
             OnDataChanged();
         }
     }
-#ifndef ANDROID
+#if !ANDROID || IOS
 	else if (pPanel == m_pAspectRatio)
 	{
 		PrepareResolutionList();
@@ -1685,7 +1685,7 @@ void		COptionsSubVideo::EnableOrDisableWindowedForVR()
 	}
 	else
 	{
-#ifdef ANDROID
+#if ANDROID || IOS
 		m_pWindowed->SetEnabled( false );
 #else
 		m_pWindowed->SetEnabled( true );

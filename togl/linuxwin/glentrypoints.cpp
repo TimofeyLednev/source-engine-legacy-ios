@@ -54,7 +54,7 @@
 #error
 #endif
 
-#if defined(OSX) || defined(LINUX) || (defined (WIN32) && defined( DX_TO_GL_ABSTRACTION )) || defined(PLATFORM_BSD)
+#if defined(APPLE) || defined(LINUX) || (defined (WIN32) && defined( DX_TO_GL_ABSTRACTION )) || defined(PLATFORM_BSD)
 	#include "appframework/ilaunchermgr.h"
 	ILauncherMgr *g_pLauncherMgr = NULL;
 #endif
@@ -296,7 +296,7 @@ static bool CheckOpenGLExtension_internal(const char *ext, const int coremajor, 
 				return false;
 			}
 		}
-#elif !defined ( OSX ) && !defined( __ANDROID__ )
+#elif !defined ( APPLE ) && !defined( __ANDROID__ )
 		if (!ptr)
 		{
 			static CDynamicFunctionOpenGL< true, Display *( APIENTRY *)( ), Display* > glXGetCurrentDisplay("glXGetCurrentDisplay");
@@ -377,7 +377,7 @@ COpenGLEntryPoints::COpenGLEntryPoints()
 	// !!! FIXME:  hint Apple's drivers and not because we rely on the
 	// !!! FIXME:  functionality. If so, just remove this check (and the
 	// !!! FIXME:  GL_NV_fence code entirely).
-#ifndef ANDROID // HACK
+#if !ANDROID && !IOS// HACK
  	if ((m_bHave_OpenGL) && ((!m_bHave_GL_NV_fence) && (!m_bHave_GL_ARB_sync) && (!m_bHave_GL_APPLE_fence)))
  	{
  		Error( "Required OpenGL extension \"GL_NV_fence\", \"GL_ARB_sync\", or \"GL_APPLE_fence\" is not supported. Please upgrade your OpenGL driver." );
@@ -427,7 +427,7 @@ COpenGLEntryPoints::COpenGLEntryPoints()
 #undef GL_EXT
 #endif
 
-#ifdef OSX
+#ifdef APPLE
 	m_bHave_GL_NV_bindless_texture = false;
 	m_bHave_GL_AMD_pinned_memory = false;
 #else
@@ -449,7 +449,7 @@ COpenGLEntryPoints::COpenGLEntryPoints()
 	{
 		m_bHave_GL_AMD_pinned_memory = false;
 	}
-#endif // !OSX
+#endif // !APPLE
 
 	// Getting reports of black screens, etc. with ARB_buffer_storage and AMD drivers. This type of thing:
 	//  http://forums.steampowered.com/forums/showthread.php?t=3266806
@@ -478,7 +478,7 @@ COpenGLEntryPoints::COpenGLEntryPoints()
 	}
 #endif
 
-#ifndef OSX
+#ifndef APPLE
 	if ( !m_bHave_GL_EXT_texture_sRGB_decode )
  	{
  		Error( "Required OpenGL extension \"GL_EXT_texture_sRGB_decode\" is not supported. Please update your OpenGL driver.\n" );

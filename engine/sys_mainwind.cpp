@@ -24,7 +24,7 @@
 	#include <winsock.h>
 #elif defined(_X360)
 	// nothing to include for 360
-#elif defined(OSX)
+#elif defined(APPLE)
 #elif defined(LINUX) || defined(PLATFORM_BSD)
 	#include "tier0/dynfunction.h"
 #elif defined(_WIN32)
@@ -71,7 +71,7 @@
   #include "hl2orange.spa.h"
 #endif
 
-#if defined( LINUX )
+#if defined( LINUX ) || defined(IOS)
   #include "snd_dev_sdl.h"
 #endif
 
@@ -842,7 +842,7 @@ LRESULT CGame::WindowProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     // return 0 if handled message, 1 if not
     return lRet;
 }
-#elif defined(OSX) || defined(LINUX) || defined(_WIN32) || defined(PLATFORM_BSD)
+#elif defined(APPLE) || defined(LINUX) || defined(_WIN32) || defined(PLATFORM_BSD)
 
 #else
 #error
@@ -1323,7 +1323,7 @@ void CGame::PlayStartupVideos( void )
 	::ShowCursor( FALSE );
   #endif
 
-#if defined( LINUX )
+#if defined( LINUX ) || defined( IOS )
 	extern void VAudioInit();
 	VAudioInit();
 	Audio_CreateSDLAudioDevice();

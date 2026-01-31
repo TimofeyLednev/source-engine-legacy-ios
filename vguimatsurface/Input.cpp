@@ -331,7 +331,7 @@ void InputDetachFromWindow(void *hwnd)
 #else
 void InputAttachToWindow(void *hwnd)
 {
-#if !defined( OSX ) && !defined( LINUX )
+#if !defined( APPLE ) && !defined( LINUX )
 	if ( hwnd && !HushAsserts() )
 	{
 		// under OSX we use the Cocoa mgr to route events rather than hooking winprocs
@@ -343,7 +343,7 @@ void InputAttachToWindow(void *hwnd)
 
 void InputDetachFromWindow(void *hwnd)
 {
-#if !defined( OSX ) && !defined( LINUX )
+#if !defined( APPLE ) && !defined( LINUX )
 	if ( hwnd && !HushAsserts() )
 	{
 		// under OSX we use the Cocoa mgr to route events rather than hooking winprocs

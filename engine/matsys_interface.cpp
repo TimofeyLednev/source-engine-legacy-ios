@@ -254,6 +254,9 @@ static const char *s_pRegistryConVars[] =
 #elif defined( ANDROID )
 	#define MOD_VIDEO_CONFIG_SETTINGS "videoconfig_android.cfg"
 	#define USE_VIDEOCONFIG_FILE 1
+#elif defined( IOS )
+	#define MOD_VIDEO_CONFIG_SETTINGS "videoconfig_ios.cfg"
+	#define USE_VIDEOCONFIG_FILE 0
 #elif defined( POSIX )
 	#define MOD_VIDEO_CONFIG_SETTINGS "videoconfig_linux.cfg"
 	#define USE_VIDEOCONFIG_FILE 1

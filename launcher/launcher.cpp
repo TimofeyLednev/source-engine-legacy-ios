@@ -20,6 +20,7 @@
 #else
 #error
 #endif
+#include <dlfcn.h>
 #include "appframework/ilaunchermgr.h"
 #include <stdio.h>
 #include "tier0/icommandline.h"
@@ -268,6 +269,11 @@ char *GetBaseDirectory( void )
 void UTIL_ComputeBaseDir()
 {
 	g_szBasedir[0] = 0;
+
+	#if IOS
+	strcpy(g_szBasedir, IOS_GetDocsDir());
+	g_szBasedir[strlen(g_szBasedir)+1] = 0;
+	#endif
 
 	if ( IsX360() )
 	{
@@ -952,7 +958,7 @@ bool GrabSourceMutex()
 	CRC32_ProcessBuffer( &gameCRC, (void *)pchGameParam, Q_strlen( pchGameParam ) );
 	CRC32_Final( &gameCRC );
 
-#ifdef ANDROID
+#if ANDROID || IOS
 	return true;
 #elif defined (LINUX) || defined(PLATFORM_BSD)
 	/*
@@ -1234,6 +1240,8 @@ DLL_EXPORT int LauncherMain( int argc, char **argv )
 
 #if (defined LINUX || defined PLATFORM_BSD) && defined USE_SDL && defined TOGLES && !defined ANDROID
 	SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
+#elif IOS
+	SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 #endif
 
 #ifdef WIN32
@@ -1560,7 +1568,7 @@ DLL_EXPORT int LauncherMain( int argc, char **argv )
 		RegCloseKey(hKey);
 	}
 
-#elif defined( OSX ) || defined( LINUX ) || defined(PLATFORM_BSD)
+#elif defined( APPLE ) || defined( LINUX ) || defined(PLATFORM_BSD)
 	struct stat st;
 	if ( stat( RELAUNCH_FILE, &st ) == 0 ) 
 	{
@@ -1582,7 +1590,9 @@ DLL_EXPORT int LauncherMain( int argc, char **argv )
 				#else
 					Q_snprintf( szOpenLine, sizeof(szOpenLine), "open \"%s\"", szCmd );
 				#endif
+				#ifndef IOS
 				system( szOpenLine );
+				#endif
 			}
 			fclose( fp );
 			unlink( RELAUNCH_FILE );

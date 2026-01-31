@@ -395,7 +395,7 @@ extern "C"
 // ensures they are here even when linking against debug or release static libs
 //-----------------------------------------------------------------------------
 #ifndef NO_MEMOVERRIDE_NEW_DELETE
-#if defined (OSX) || defined (ANDROID)
+#if defined (APPLE) || defined (ANDROID)
 void *__cdecl operator new( size_t nSize ) throw (std::bad_alloc)
 #else
 void *__cdecl operator new( size_t nSize )
@@ -409,7 +409,7 @@ void *__cdecl operator new( size_t nSize, int nBlockUse, const char *pFileName, 
 	return g_pMemAlloc->Alloc(nSize, pFileName, nLine);
 }
 
-#if defined (OSX) || defined (ANDROID)
+#if defined (APPLE) || defined (ANDROID)
 void __cdecl operator delete( void *pMem ) throw()
 #else
 void __cdecl operator delete( void *pMem )
@@ -417,7 +417,7 @@ void __cdecl operator delete( void *pMem )
 {
 	g_pMemAlloc->Free( pMem );
 }
-#if defined (OSX) || defined (ANDROID)
+#if defined (APPLE) || defined (ANDROID)
 void operator delete(void*pMem, std::size_t)
 #else
 void operator delete(void*pMem, std::size_t) throw()
@@ -426,7 +426,7 @@ void operator delete(void*pMem, std::size_t) throw()
 	g_pMemAlloc->Free( pMem );
 }
 
-#if defined (OSX) || defined (ANDROID)
+#if defined (APPLE) || defined (ANDROID)
 void *__cdecl operator new[]( size_t nSize ) throw (std::bad_alloc)
 #else
 void *__cdecl operator new[]( size_t nSize )
@@ -440,7 +440,7 @@ void *__cdecl operator new[] ( size_t nSize, int nBlockUse, const char *pFileNam
 	return g_pMemAlloc->Alloc(nSize, pFileName, nLine);
 }
 
-#if defined (OSX) || defined (ANDROID)
+#if defined (APPLE) || defined (ANDROID)
 void __cdecl operator delete[]( void *pMem ) throw()
 #else
 void __cdecl operator delete[]( void *pMem )

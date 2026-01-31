@@ -18,7 +18,7 @@
 #endif
 
 #include <assert.h>
-#ifdef OSX
+#ifdef APPLE
 #include <malloc/malloc.h>
 #else
 #include <malloc.h>

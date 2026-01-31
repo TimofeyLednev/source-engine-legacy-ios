@@ -30,7 +30,7 @@ def build(bld):
 		'linuxwin/cglmquery.cpp',
 		'linuxwin/asanstubs.cpp'
 	]
-	if bld.env.DEST_OS == "darwin":
+	if bld.env.DEST_OS == "darwin" and not bld.env.IOS:
 		source += [
 			'linuxwin/glmgrcocoa.mm',
 		]
@@ -46,7 +46,7 @@ def build(bld):
 
 	libs = ['tier0','tier1','tier2','vstdlib','mathlib']
 
-	if bld.env.DEST_OS == "darwin":
+	if bld.env.DEST_OS == "darwin" and not bld.env.IOS:
 		libs += ["OPENGL", "CARBON"]
 
 	install_path = bld.env.LIBDIR

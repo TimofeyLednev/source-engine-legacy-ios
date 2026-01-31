@@ -47,6 +47,9 @@
 #include <GL/glx.h>
 #endif
 
+#if IOS
+#include "GL/gl.h"
+#endif
 // NOTE: This has to be the last file included!
 #include "tier0/memdbgon.h"
 
@@ -54,7 +57,7 @@
 #error
 #endif
 
-#if defined(PLATFORM_BSD) || defined(OSX) || defined(LINUX) || (defined (WIN32) && defined( DX_TO_GL_ABSTRACTION ))
+#if defined(PLATFORM_BSD) || defined(APPLE) || defined(LINUX) || (defined (WIN32) && defined( DX_TO_GL_ABSTRACTION ))
 	#include "appframework/ilaunchermgr.h"
 	ILauncherMgr *g_pLauncherMgr = NULL;
 #endif
@@ -306,7 +309,7 @@ static bool CheckOpenGLExtension_internal(const char *ext, const int coremajor, 
 			}
 		}
 
-#elif !defined ( OSX ) && !defined( __ANDROID__ )
+#elif !defined ( APPLE ) && !defined( __ANDROID__ )
 /*
 		if (!ptr)
 		{

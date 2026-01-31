@@ -33,6 +33,10 @@
 #include "xbox\xbox_win32stubs.h"
 #endif
 
+#ifdef IOS
+#include "tier0/iosutils.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
@@ -291,6 +295,8 @@ static bool Sys_GetExecutableName( char *out, int len )
     {
 		return false;
     }
+#elif IOS
+	strncpy(out, IOS_GetExecDir(), len);
 #else
 	if ( CommandLine()->GetParm(0) )
 	{
@@ -309,6 +315,11 @@ bool FileSystem_GetExecutableDir( char *exedir, int exeDirLen )
 {
 #ifdef ANDROID
 	Q_snprintf( exedir, exeDirLen, "%s", getenv("APP_LIB_PATH") );
+/*#elif IOS
+	char *execPath = (char *)malloc(MAX_PATH);
+	Q_strcpy(execPath, IOS_GetExecDir());
+	Q_StripFilename(execPath);
+	Q_snprintf( exedir, exeDirLen, "%s", execPath);*/
 #else
 	exedir[0] = 0;
 
@@ -365,6 +376,9 @@ static bool FileSystem_GetBaseDir( char *baseDir, int baseDirLen )
 {
 #ifdef ANDROID
 	strncpy(baseDir, getenv("VALVE_GAME_PATH"), baseDirLen);
+	return true;
+#elif IOS
+	strncpy(baseDir, IOS_GetDocsDir(), baseDirLen);
 	return true;
 #else
 	if ( FileSystem_GetExecutableDir( baseDir, baseDirLen ) )

@@ -12,7 +12,7 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#ifdef OSX
+#ifdef APPLE
 #include <malloc/malloc.h>
 #else
 #include <malloc.h>

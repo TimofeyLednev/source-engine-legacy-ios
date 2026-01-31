@@ -2812,7 +2812,7 @@ void GLMContext::BindFBOToCtx( CGLMFBO *fbo, GLenum bindPoint )
 
 	if ( bindPoint == GL_FRAMEBUFFER )
 	{
-		gGL->glBindFramebuffer( GL_FRAMEBUFFER, fbo ? fbo->m_name : 0 );
+		gGL->glBindFramebuffer( GL_FRAMEBUFFER, fbo ? fbo->m_name : gGL->m_nSystemFramebufferID );
 		m_boundReadFBO = fbo;
 		m_boundDrawFBO = fbo;
 		return;
@@ -2832,7 +2832,7 @@ void GLMContext::BindFBOToCtx( CGLMFBO *fbo, GLenum bindPoint )
 		}
 		else
 		{
-			gGL->glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 );
+			gGL->glBindFramebuffer( GL_READ_FRAMEBUFFER, gGL->m_nSystemFramebufferID );
 			
 			m_boundReadFBO = NULL;
 		}
@@ -2849,7 +2849,7 @@ void GLMContext::BindFBOToCtx( CGLMFBO *fbo, GLenum bindPoint )
 		}
 		else
 		{
-			gGL->glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
+			gGL->glBindFramebuffer( GL_DRAW_FRAMEBUFFER, gGL->m_nSystemFramebufferID );
 			
 			m_boundDrawFBO = NULL;
 		}
@@ -5003,7 +5003,11 @@ void GLMContext::DrawRangeElementsNonInline( GLenum mode, GLuint start, GLuint e
 
 	if ( m_pBoundPair )
 	{
+		#ifndef ANGLE
 		gGL->glDrawRangeElementsBaseVertex( mode, start, end, count, type, indicesActual, baseVertex );
+		#else
+		gGL->glDrawRangeElementsBaseVertexOES( mode, start, end, count, type, indicesActual, baseVertex );
+		#endif
 
 #if GLMDEBUG
 		if ( m_slowCheckEnable )

@@ -23,7 +23,7 @@
 #include "mathlib/vector.h"
 #if !defined( _X360 )
 #include "mathlib/amd3dx.h"
-#ifndef OSX
+#ifndef APPLE
 #include "3dnow.h"
 #endif
 #include "sse.h"
@@ -3258,7 +3258,7 @@ void MathLib_Init( float gamma, float texGamma, float brightness, int overbright
 
 	// SSE Generally performs better than 3DNow when present, so this is placed 
 	// first to allow SSE to override these settings.
-#if !defined( OSX ) && !defined( PLATFORM_WINDOWS_PC64 ) && !defined(LINUX) && !defined(PLATFORM_BSD)
+#if !defined( APPLE ) && !defined( PLATFORM_WINDOWS_PC64 ) && !defined(LINUX) && !defined(PLATFORM_BSD)
 	if ( bAllow3DNow && pi.m_b3DNow )
 	{
 		s_b3DNowEnabled = true;

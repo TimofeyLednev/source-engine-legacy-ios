@@ -3952,7 +3952,7 @@ bool DLL_LOCAL Host_IsValidSignature( const char *pFilename, bool bAllowUnknown 
 #if defined( SWDS ) || defined(_X360)
 	return true;
 #else
-	if ( sv.IsDedicated() || IsOSX() || IsLinux() || IsBSD() )
+	if ( sv.IsDedicated() || IsOSX() || IsLinux() || IsBSD() || IsIOS() )
 	{
 		// dedicated servers and Mac and Linux  binaries don't check signatures
 		return true;
@@ -4003,7 +4003,7 @@ bool DLL_LOCAL Host_IsValidSignature( const char *pFilename, bool bAllowUnknown 
 // This keeps legitimate users with modified binaries from getting VAC banned because of them
 bool DLL_LOCAL Host_AllowLoadModule( const char *pFilename, const char *pPathID, bool bAllowUnknown, bool bIsServerOnly /* = false */ )
 {
-#if defined( SWDS ) || defined ( OSX ) || defined( LINUX )
+#if defined( SWDS ) || defined ( APPLE ) || defined( LINUX )
 	// dedicated servers and Mac and Linux binaries don't check signatures
 	return true;
 #else

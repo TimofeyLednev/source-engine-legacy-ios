@@ -396,7 +396,7 @@ void CBaseHudChatInputLine::ApplySchemeSettings(vgui::IScheme *pScheme)
 	vgui::HFont hFont;
 
 	// FIXME:  Outline
-	if( IsAndroid() )
+	if( IsMobile() )
 		hFont = pScheme->GetFont( "ChatFont", true );
 	else
 		hFont = pScheme->GetFont( "ChatFont" );
@@ -588,7 +588,7 @@ CHudChatHistory::CHudChatHistory( vgui::Panel *pParent, const char *panelName ) 
 {
 	vgui::HScheme scheme;
 
-	if( IsAndroid() && !CommandLine()->FindParm( "-nocustomchat" ) )
+	if( IsMobile() && !CommandLine()->FindParm( "-nocustomchat" ) )
 		scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/customchatscheme.res", "ChatScheme");
 	else
 		scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/ChatScheme.res", "ChatScheme");
@@ -602,7 +602,7 @@ void CHudChatHistory::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	if( IsAndroid() )
+	if( IsMobile() )
 		SetFont( pScheme->GetFont( "ChatFont", true ) );
 	else
 		SetFont( pScheme->GetFont( "ChatFont" ) );
@@ -622,7 +622,7 @@ CBaseHudChat::CBaseHudChat( const char *pElementName )
 
 	vgui::HScheme scheme;
 
-	if( IsAndroid() && !CommandLine()->FindParm( "-nocustomchat" ) )
+	if( IsMobile() && !CommandLine()->FindParm( "-nocustomchat" ) )
 		scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/customchatscheme.res", "ChatScheme" );
 	else
 		scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/ChatScheme.res", "ChatScheme" );
@@ -698,7 +698,7 @@ CHudChatFilterPanel *CBaseHudChat::GetChatFilterPanel( void )
 		{
 			vgui::HScheme scheme;
 
-			if( IsAndroid() && !CommandLine()->FindParm( "-nocustomchat" ) )
+			if( IsMobile() && !CommandLine()->FindParm( "-nocustomchat" ) )
 				scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/customchatscheme.res", "ChatScheme");
 			else
 				scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/ChatScheme.res", "ChatScheme");
@@ -717,7 +717,7 @@ CHudChatFilterPanel *CBaseHudChat::GetChatFilterPanel( void )
 
 void CBaseHudChat::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
-	if( IsAndroid() && !CommandLine()->FindParm( "-nocustomchat" ) )
+	if( IsMobile() && !CommandLine()->FindParm( "-nocustomchat" ) )
 		LoadControlSettings( "resource/UI/customchat.res" );
 	else
 		LoadControlSettings( "resource/UI/BaseChat.res" );

@@ -19,8 +19,19 @@
 
 #include "tier1/utllinkedlist.h"
 #include "tier1/convar.h"
-#ifdef TOGLES
+
+#if TOGLES && !IOS
 #include <EGL/egl.h>
+#endif
+#if IOS
+#include <dlfcn.h>
+#include "EGL/egl.h"
+#include "EGL/eglext.h"
+#include "EGL/eglext_angle.h"
+#include "tier0/iosutils.h"
+#include "SDL2/SDL_rect.h"
+#include "SDL2/sdl_video.h"
+#include "SDL2/SDL_syswm.h"
 #endif
 
 // NOTE: This has to be the last file included! (turned off below, since this is included like a header)
@@ -36,8 +47,12 @@
 #define GLMPRINTF(args)
 #endif
 
-#if defined( OSX ) || defined( ANDROID )
+#if defined( APPLE ) || defined( ANDROID )
 ConVar rawinput_set_one_time( "rawinput_set_one_time", "0", FCVAR_ARCHIVE|FCVAR_HIDDEN, "");
+#endif
+
+#if ANGLE
+#define SDL_GL_SwapWindow(x) eglSwapBuffers(native_display, surface)
 #endif
 
 ConVar gl_blit_halfx( "gl_blit_halfx", "0" );
@@ -76,6 +91,29 @@ t_eglInitialize _eglInitialize;
 t_eglGetDisplay _eglGetDisplay;
 t_eglQueryString _eglQueryString;
 #endif
+#if ANGLE
+EGLint numConfigs;
+EGLConfig config;
+EGLDisplay native_display;
+#endif
+
+/*#if IOS
+static void *l_gl4es = NULL;
+static void *l_gles = NULL;
+static void *l_egl = NULL;
+
+typedef void *(*t_glGetProcAddress)( const char * );
+typedef SDL_bool (*t_eglBindAPI)(int api); 
+typedef SDL_bool (*t_eglInitialize)(SDL_Window* window, int *major, int *minor);
+typedef SDL_Window* (*t_eglGetDisplay)(void* native_display);
+typedef char const *(*t_eglQueryString)(SDL_Window* window, int name);
+
+t_eglBindAPI _eglBindAPI;
+t_glGetProcAddress _glGetProcAddress;
+t_eglInitialize _eglInitialize;
+t_eglGetDisplay _eglGetDisplay;
+t_eglQueryString _eglQueryString;
+#endif*/
 
 /*
 From Ryan Gordon:
@@ -200,7 +238,7 @@ void *VoidFnPtrLookup_GlMgr(const char *fn, bool &okay, const bool bRequired, vo
 	// The SDL path would work on all these platforms, if we were using SDL there, too...
 
 
-#if defined ANDROID || defined TOGLES
+#if defined ANDROID || defined TOGLES && ( !defined IOS || defined ANGLE)
 	// SDL does the right thing, so we never need to use tier0 in this case.
 	if( _glGetProcAddress )
 	{
@@ -270,7 +308,7 @@ public:
 
 	// Get the next N events. The function returns the number of events that were filled into your array.
 	virtual int GetEvents( CCocoaEvent *pEvents, int nMaxEventsToReturn, bool debugEvents = false );
-#if defined(LINUX) || defined(PLATFORM_BSD)
+#if defined(LINUX) || defined(PLATFORM_BSD) || defined(IOS)
 	virtual int PeekAndRemoveKeyboardEvents( bool *pbEsc, bool *pbReturn, bool *pbSpace, bool debugEvent = false );
 #endif
 
@@ -350,6 +388,9 @@ private:
 	uint m_nWindowRefCount;
 
 	SDL_Window *m_Window;
+	#ifdef ANGLE
+	EGLSurface surface;
+	#endif
 
 	bool m_bCursorVisible;
 	bool m_bSetMouseVisibleCalled;
@@ -524,7 +565,7 @@ InitReturnVal_t CSDLMgr::Init()
 			SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG );
 		}
 
-#if defined( TOGLES )
+#if defined( TOGLES ) && !defined( IOS )
 		if (SDL_GL_LoadLibrary("libGLESv3.so") == -1)
 #else
 		if (SDL_GL_LoadLibrary(NULL) == -1)
@@ -602,8 +643,13 @@ InitReturnVal_t CSDLMgr::Init()
 
 
 #ifdef TOGLES
+	#ifndef ANGLE
 	l_egl = dlopen("libEGL.so", RTLD_LAZY);
 	l_gles = dlopen("libGLESv3.so", RTLD_LAZY);
+	#else
+	l_egl = dlopen("libEGL.framework/libEGL", RTLD_LAZY); // for ANGLE support
+	l_gles = dlopen("libGLESv2.framework/libGLESv2", RTLD_LAZY);
+	#endif
 
 	if( l_egl )
 	{
@@ -818,7 +864,12 @@ bool CSDLMgr::CreateHiddenGameWindow( const char *pTitle, int width, int height 
 	int y = SDL_WINDOWPOS_CENTERED;
 	int flags = SDL_WINDOW_HIDDEN;
 #if defined( DX_TO_GL_ABSTRACTION )
+	#if ANGLE
+	flags |= SDL_WINDOW_METAL;
+	flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+	#else
 	flags |= SDL_WINDOW_OPENGL;
+	#endif
 #endif
 	m_Window = SDL_CreateWindow( pTitle, x, y, width, height, flags );
 
@@ -849,13 +900,79 @@ bool CSDLMgr::CreateHiddenGameWindow( const char *pTitle, int width, int height 
 #endif
 
 #if defined( DX_TO_GL_ABSTRACTION )
+	#ifndef ANGLE
 	m_GLContext = SDL_GL_CreateContext(m_Window);
 	if (m_GLContext == NULL)
 		Error( "Failed to create GL context: %s", SDL_GetError() );
 
 	SDL_GL_MakeCurrent(m_Window, m_GLContext);
+	#else
+	EGLAttrib egl_display_attribs[] = {
+        EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_METAL_ANGLE,
+        EGL_POWER_PREFERENCE_ANGLE, EGL_HIGH_POWER_ANGLE,
+        EGL_NONE
+    };
 
-#if defined ANDROID && !defined TOGLES
+	native_display = eglGetPlatformDisplay(EGL_PLATFORM_ANGLE_ANGLE, (void*) EGL_DEFAULT_DISPLAY, egl_display_attribs);
+	if (native_display == EGL_NO_DISPLAY)
+    {
+        printf("Failed to get EGL display\n");
+    }
+
+	if (eglInitialize(native_display, NULL, NULL) == false)
+    {
+        printf("Failed to initialize EGL\n");
+    }
+
+	EGLint attribs[] = {
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+	EGL_SURFACE_TYPE, EGL_WINDOW_BIT, // Or 3
+    EGL_BLUE_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_RED_SIZE, 8,
+	EGL_DEPTH_SIZE, 24,
+	EGL_STENCIL_SIZE, 8,
+    EGL_NONE
+	};
+
+	EGLint contextAttributes[] = {
+    EGL_CONTEXT_CLIENT_VERSION, 3,
+    EGL_NONE
+	};
+
+	SDL_SysWMinfo info;
+	SDL_VERSION(&info.version);
+	SDL_GetWindowWMInfo(m_Window, &info);
+
+	if (!eglChooseConfig(native_display, attribs, &config, 1, &numConfigs))
+	{
+		printf("Failed to choose EGL config\n");
+	}
+
+	m_GLContext = eglCreateContext(native_display, config, EGL_NO_CONTEXT, contextAttributes);
+
+	if (m_GLContext == EGL_NO_CONTEXT) {
+        printf("Failed to create EGL context\n");
+    }
+
+	//void* renderLayer = IOS_GetCALayerPointer( &info );
+	SDL_MetalView metalView = SDL_Metal_CreateView(m_Window);
+    void *renderLayer = SDL_Metal_GetLayer(metalView); 
+
+	EGLint surface_attributes[] = {
+    EGL_RENDER_BUFFER, EGL_BACK_BUFFER, // Enable double buffering
+    EGL_NONE
+	};
+
+	surface = eglCreateWindowSurface(native_display, config, (EGLNativeWindowType)renderLayer, surface_attributes);
+
+	if (!eglMakeCurrent(native_display, surface, surface, m_GLContext))
+    {
+        printf("Failed to make EGL context current\n");
+    }
+#endif
+
+#if (defined ANDROID || defined IOS) && !defined TOGLES
 	if( l_gl4es )
 	{
 		_glGetProcAddress = (t_glGetProcAddress)dlsym(l_gl4es, "gl4es_GetProcAddress" );
@@ -888,6 +1005,14 @@ bool CSDLMgr::CreateHiddenGameWindow( const char *pTitle, int width, int height 
 
 	gGL = GetOpenGLEntryPoints(VoidFnPtrLookup_GlMgr);
 
+	#if defined( IOS ) && !defined( ANGLE )
+		if ( gGL->m_nSystemFramebufferID == 0 )
+		{
+			GLint currentFBO = 0;
+    		gGL->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentFBO);
+			gGL->m_nSystemFramebufferID = currentFBO;
+		}
+	#endif
 	// It is now safe to call any base GL entry point that's supplied by gGL.
 	// You still need to explicitly test for extension entry points, though!
 
@@ -938,7 +1063,7 @@ bool CSDLMgr::CreateHiddenGameWindow( const char *pTitle, int width, int height 
 	return true;
 }
 
-#if defined( DX_TO_GL_ABSTRACTION )
+#if defined( DX_TO_GL_ABSTRACTION ) && !defined( ANGLE )
 
 PseudoGLContextPtr	CSDLMgr::GetMainContext()
 {
@@ -982,7 +1107,49 @@ bool CSDLMgr::MakeContextCurrent( PseudoGLContextPtr hContext )
 	return SDL_GL_MakeCurrent(m_Window, (SDL_GLContext)hContext ) == 0;
 }
 
-#endif // DX_TO_GL_ABSTRACTION
+#elif ANGLE
+
+PseudoGLContextPtr	CSDLMgr::GetMainContext()
+{
+	SDLAPP_FUNC;
+
+	return (PseudoGLContextPtr)m_GLContext;
+}
+
+PseudoGLContextPtr CSDLMgr::CreateExtraContext()
+{
+	SDLAPP_FUNC;
+
+	EGLint contextAttributes[] = {
+    EGL_CONTEXT_CLIENT_VERSION, 3,
+    EGL_NONE
+	};
+
+	return (PseudoGLContextPtr) eglCreateContext(native_display, config, EGL_NO_CONTEXT, contextAttributes);
+}
+
+void CSDLMgr::DeleteContext( PseudoGLContextPtr hContext )
+{
+	SDLAPP_FUNC;
+	Assert( (hContext != m_GLContext ));
+	
+	// Don't delete the main one.
+	if ( hContext != m_GLContext )
+	{
+		eglDestroyContext( native_display, hContext );
+	}
+}
+
+bool CSDLMgr::MakeContextCurrent( PseudoGLContextPtr hContext )
+{
+	SDLAPP_FUNC;
+
+	// We only ever have one GL context on Linux at the moment, so don't spam these calls.
+	return eglMakeCurrent( native_display, surface, surface, hContext ) == 0;
+}
+
+
+#endif // DX_TO_GL_ABSTRACTION && !ANGLE
 
 
 int CSDLMgr::GetEvents( CCocoaEvent *pEvents, int nMaxEventsToReturn, bool debugEvent )
@@ -1010,7 +1177,7 @@ int CSDLMgr::GetEvents( CCocoaEvent *pEvents, int nMaxEventsToReturn, bool debug
 	return nToWrite;
 }
 
-#if defined(LINUX) || defined(PLATFORM_BSD)
+#if defined(LINUX) || defined(PLATFORM_BSD) || defined(IOS)
 
 int CSDLMgr::PeekAndRemoveKeyboardEvents( bool *pbEsc, bool *pbReturn, bool *pbSpace, bool debugEvent )
 {
@@ -1145,7 +1312,7 @@ void CSDLMgr::OnFrameRendered()
 
 		ConVarRef rawinput( "m_rawinput" );
 
-#if defined( OSX ) || defined( ANDROID )
+#if defined( APPLE ) || defined( ANDROID )
 		// We default raw input to on on Mac/Android and set it one time for all users since
 		// it didn't used to be the default.
 		if ( !rawinput_set_one_time.GetBool() )
@@ -2016,7 +2183,11 @@ void CSDLMgr::DecWindowRefCount()
 #if defined( DX_TO_GL_ABSTRACTION )
 		if ( m_Window )
 		{
+			#ifndef ANGLE
 			SDL_GL_MakeCurrent( m_Window, m_GLContext );
+			#else
+			eglMakeCurrent( native_display, surface, surface, m_GLContext );
+			#endif
 		}
 
 		if ( gGL && m_readFBO )
@@ -2028,8 +2199,12 @@ void CSDLMgr::DecWindowRefCount()
 #endif
 		}
 		m_readFBO = 0;
-								
+		
+		#ifndef ANGLE
 		SDL_GL_DeleteContext( m_GLContext );
+		#else
+		eglDestroyContext( native_display, m_GLContext );
+		#endif
 #if !defined( OSX ) && defined( DBGFLAG_ASSERT )
 		// Clear the GL entrypoint pointers, ensuring we crash if someone tries to call GL after we delete the context.
 		Msg( "%s: Calling ClearOpenGLEntryPoints. Should crash if someone calls GL after this.\n", __FUNCTION__ );
@@ -2134,7 +2309,7 @@ void CSDLMgr::DisplayedSize( uint &width, uint &height )
 	SDLAPP_FUNC;
 
 	int w, h;
-	SDL_GetWindowSize(m_Window, &w, &h);
+	SDL_GetWindowSizeInPixels(m_Window, &w, &h);
 	width = (uint) w;
 	height = (uint) h;
 }
@@ -2180,7 +2355,7 @@ void CSDLMgr::GetDesiredPixelFormatAttribsAndRendererInfo( uint **ptrOut, uint *
 	if (rendInfoOut)
 	{
 		GLMDisplayDB *db = GetDisplayDB();
-#ifdef OSX
+#ifdef APPLE
 		*rendInfoOut = db->m_renderers->Head()->m_info;
 #else
 		*rendInfoOut = db->m_renderer.m_info;
@@ -2236,14 +2411,14 @@ GLMDisplayDB *CSDLMgr::GetDisplayDB( void )
 
 			// m_leopard = (info.m_osComboVersion < 0x000A0600);
 
-			m_force_vsync = info.m_badDriver1064NV;		// just force it if it's the bum NV driver
+			//m_force_vsync = info.m_badDriver1064NV;		// just force it if it's the bum NV driver
 		}
 #endif
 	}
 	return m_displayDB;
 }
 
-#ifndef OSX
+#ifndef APPLE
 #include "glmdisplaydb_linuxwin.inl"
 #endif
 

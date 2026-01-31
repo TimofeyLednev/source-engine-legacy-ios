@@ -52,7 +52,7 @@ DEFINE_ENUM_BITWISE_OPERATORS( EPlatform_t );
 
 #if defined( IS_WINDOWS_PC )
 	const EPlatform_t	thisPlatform = PLATFORM_WIN32;
-#elif defined( OSX )
+#elif defined( APPLE )
 	const EPlatform_t	thisPlatform = PLATFORM_OSX;
 #elif defined( _X360 )
 	const EPlatform_t	thisPlatform = PLATFORM_XBOX_360;
@@ -65,7 +65,7 @@ DEFINE_ENUM_BITWISE_OPERATORS( EPlatform_t );
 #endif
 
 
-#if defined( OSX ) || defined( LINUX ) || defined(PLATFORM_BSD)
+#if defined( APPLE ) || defined( LINUX ) || defined(PLATFORM_BSD)
 ILauncherMgr *g_pLauncherMgr = NULL;
 #endif
 
@@ -1382,7 +1382,7 @@ bool CVideoCommonServices::ProcessFullScreenInput( bool &bAbortEvent, bool &bPau
 	bool bEscPressed    = ( m_bScanEsc )    ? CGEventSourceKeyState( kCGEventSourceStateCombinedSessionState, kVK_Escape ) : false;
 	bool bReturnPressed = ( m_bScanReturn ) ? CGEventSourceKeyState( kCGEventSourceStateCombinedSessionState, kVK_Return ) : false;
 	bool bSpacePressed  = ( m_bScanSpace )  ? CGEventSourceKeyState( kCGEventSourceStateCombinedSessionState, kVK_Space )  : false;
-#elif defined(LINUX) || defined(PLATFORM_BSD)
+#elif defined(LINUX) || defined(PLATFORM_BSD) || defined(IOS)
 	g_pLauncherMgr->PumpWindowsMessageLoop();
 
 	// Escape, return, or space stops or pauses the playback

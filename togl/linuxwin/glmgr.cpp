@@ -645,7 +645,7 @@ void GLMContext::ForceFlushStates()
 	gGL->glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, m_nBoundGLBuffer[ kGLMIndexBuffer] );
 	gGL->glBindBufferARB( GL_ARRAY_BUFFER_ARB, m_nBoundGLBuffer[ kGLMVertexBuffer] );
 
-#ifndef OSX
+#ifndef APPLE
 	if ( gGL->m_bHave_GL_AMD_pinned_memory )
 	{
 		gGL->glBindBufferARB( GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD, m_PinnedMemoryBuffers[m_nCurPinnedMemoryBuffer].GetHandle() );
@@ -1771,7 +1771,7 @@ void GLMContext::PreloadTex( CGLMTex *tex, bool force )
 	// bind texture and sampling params
 	CGLMTex *pPrevTex = m_samplers[15].m_pBoundTex;
 
-#ifndef OSX // 10.6
+#ifndef APPLE // 10.6
 	if ( m_bUseSamplerObjects )
 	{
 		gGL->glBindSampler( 15, 0 );
@@ -2410,7 +2410,7 @@ void GLMContext::Present( CGLMTex *tex )
 	m_nTotalVSUniformCalls = 0, m_nTotalVSUniformBoneCalls = 0, m_nTotalVSUniformsSet = 0, m_nTotalVSUniformsBoneSet = 0, m_nTotalPSUniformCalls = 0, m_nTotalPSUniformsSet = 0;
 #endif
 
-#ifndef OSX
+#ifndef APPLE
 	GLMGPUTimestampManagerTick();
 #endif
 }
@@ -2492,7 +2492,7 @@ GLMContext::GLMContext( IDirect3DDevice9 *pDevice, GLMDisplayParams *params )
 
 	ClearCurAttribs();
 
-#ifndef OSX
+#ifndef APPLE
 	m_nCurPinnedMemoryBuffer = 0;
 	if ( gGL->m_bHave_GL_AMD_pinned_memory )
 	{
@@ -2503,7 +2503,7 @@ GLMContext::GLMContext( IDirect3DDevice9 *pDevice, GLMDisplayParams *params )
 
 		gGL->glBindBufferARB( GL_EXTERNAL_VIRTUAL_MEMORY_BUFFER_AMD, m_PinnedMemoryBuffers[m_nCurPinnedMemoryBuffer].GetHandle() );
 	}
-#endif // OSX
+#endif // APPLE
 
 	m_nCurPersistentBuffer = 0;
 	if ( gGL->m_bHave_GL_ARB_buffer_storage )
@@ -2850,7 +2850,7 @@ void GLMContext::Reset()
 
 GLMContext::~GLMContext	()
 {
-#ifndef OSX
+#ifndef APPLE
 	GLMGPUTimestampManagerDeinit();
 		
 	for ( uint t = 0; t < cNumPinnedMemoryBuffers; t++ )
@@ -2882,7 +2882,7 @@ GLMContext::~GLMContext	()
 			m_samplerObjectHash[i].m_samplerObject = 0;
 		}
 	}
-#endif // !OSX
+#endif // !APPLE
 
 	if (m_debugFontTex)
 	{
@@ -2968,7 +2968,7 @@ void GLMContext::BindFBOToCtx( CGLMFBO *fbo, GLenum bindPoint )
 
 	if ( bindPoint == GL_FRAMEBUFFER_EXT )
 	{
-		gGL->glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, fbo ? fbo->m_name : 0 );
+		gGL->glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, fbo ? fbo->m_name : gGL->m_nSystemFramebufferID );
 		m_boundReadFBO = fbo;
 		m_boundDrawFBO = fbo;
 		return;
@@ -2988,7 +2988,7 @@ void GLMContext::BindFBOToCtx( CGLMFBO *fbo, GLenum bindPoint )
 		}
 		else
 		{
-			gGL->glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, 0 );
+			gGL->glBindFramebufferEXT( GL_READ_FRAMEBUFFER_EXT, gGL->m_nSystemFramebufferID );
 			
 			m_boundReadFBO = NULL;
 		}
@@ -3005,7 +3005,7 @@ void GLMContext::BindFBOToCtx( CGLMFBO *fbo, GLenum bindPoint )
 		}
 		else
 		{
-			gGL->glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, 0 );
+			gGL->glBindFramebufferEXT( GL_DRAW_FRAMEBUFFER_EXT, gGL->m_nSystemFramebufferID );
 			
 			m_boundDrawFBO = NULL;
 		}
@@ -5252,7 +5252,7 @@ void GLMContext::DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsize
 		}
 		else
 		{
-#if defined( OSX )
+#if defined( APPLE )
             // MoeMod: TOGL IS NOT USING m_boundProgram THIS AT ALL
 #else
 			AssertOnce(!"drawing with no vertex program bound");
@@ -5265,7 +5265,7 @@ void GLMContext::DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsize
 		}
 		else
 		{
-#if defined( OSX )
+#if defined( APPLE )
             // MoeMod: TOGL IS NOT USING m_boundProgram THIS AT ALL
 #else
 			AssertOnce(!"drawing with no fragment program bound");

@@ -56,7 +56,7 @@ public:
 	CUtlVector< GLMDisplayMode* >	*m_modes;				// starts out NULL, set by PopulateModes
 	GLMDisplayMode					m_DesktopMode;
 
-#ifdef OSX
+#ifdef APPLE
 	GLMDisplayInfo( CGDirectDisplayID displayID, CGOpenGLDisplayMask displayMask );
 #else
 	GLMDisplayInfo( void );
@@ -68,7 +68,7 @@ public:
 
 	void	Dump( int which );
 
-#ifdef OSX
+#ifdef APPLE
 private:
 	int m_display;
 #endif
@@ -82,20 +82,20 @@ class GLMRendererInfo
 {
 public:
 	GLMRendererInfoFields			m_info;
-#ifdef OSX
+#ifdef APPLE
 	CUtlVector< GLMDisplayInfo* >	*m_displays;			// starts out NULL, set by PopulateDisplays
 #else
 	GLMDisplayInfo					*m_display;
 #endif
 
-#ifdef OSX
+#ifdef APPLE
 	GLMRendererInfo			( GLMRendererInfoFields *info );
 #else
 	GLMRendererInfo			();
 #endif
 	~GLMRendererInfo		( void );
 
-#ifndef OSX
+#ifndef APPLE
 	void	Init( GLMRendererInfoFields *info );
 #endif
 	void	PopulateDisplays();
@@ -104,7 +104,7 @@ public:
 
 //===============================================================================
 
-#ifdef OSX
+#ifdef APPLE
 // this is just a tuple describing fake adapters which are really renderer/display pairings.
 // dxabstract bridges the gap between the d3d adapter-centric world and the GL renderer+display world.
 // this makes it straightforward to handle cases like two video cards with two displays on one, and one on the other -
@@ -124,7 +124,7 @@ struct GLMFakeAdapter
 class GLMDisplayDB
 {
 public:
-#ifdef OSX
+#ifdef APPLE
 	CUtlVector< GLMRendererInfo* >		*m_renderers;			// starts out NULL, set by PopulateRenderers
 	CUtlVector< GLMFakeAdapter >		m_fakeAdapters;
 #else

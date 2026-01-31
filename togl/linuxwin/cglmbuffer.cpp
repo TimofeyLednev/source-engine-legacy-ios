@@ -792,7 +792,7 @@ void CGLMBuffer::Lock( GLMBuffLockParams *pParams, char **pAddressOut )
 
 		//DevMsg( " --> buff=%x, startOffset=%d, paramsOffset=%d, persistOffset = %d\n", this, m_nPersistentBufferStartOffset, pParams->m_nOffset, persistentBufferOffset );
 	}
-#ifndef OSX
+#ifndef APPLE
 	else if ( m_bDynamic && gGL->m_bHave_GL_AMD_pinned_memory && ( m_pCtx->GetCurPinnedMemoryBuffer()->GetBytesRemaining() >= pParams->m_nSize ) )
 	{
 		if ( pParams->m_bDiscard )

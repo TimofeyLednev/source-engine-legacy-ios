@@ -182,6 +182,8 @@ def define_platform(conf):
 	conf.env.TOGLES = conf.options.TOGLES
 	conf.env.GL = conf.options.GL and not conf.options.TESTS and not conf.options.DEDICATED
 	conf.env.OPUS = conf.options.OPUS
+	conf.env.IOS = conf.options.IOS
+	conf.env.ANGLE = conf.options.ANGLE
 
 	arch32 = conf.run_test(CPP_32BIT_CHECK, 'Testing 32bit support')
 	arch64 = conf.run_test(CPP_64BIT_CHECK, 'Testing 64bit support')
@@ -205,6 +207,9 @@ def define_platform(conf):
 
 	if conf.options.TOGLES:
 		conf.env.append_unique('DEFINES', ['TOGLES'])
+
+	if conf.env.ANGLE:
+		conf.env.append_unique('DEFINES', ['ANGLE'])
 
 	if conf.options.TESTS:
 		conf.define('UNITTESTS', 1)
@@ -251,18 +256,26 @@ def define_platform(conf):
 		])
 	elif conf.env.DEST_OS == 'darwin':
 		conf.env.append_unique('DEFINES', [
-			'OSX=1', '_OSX=1',
+			'APPLE=1', '_APPLE=1',
 			'POSIX=1', '_POSIX=1', 'PLATFORM_POSIX=1',
 			'GNUC',
 			'NO_HOOK_MALLOC',
 			'_DLL_EXT=.dylib'
 		])
 		conf.env.append_unique('INCLUDES', [
+			os.path.abspath('thirdparty/angle/include'),
 			'/opt/local/include'
 		])
-		conf.env.append_unique('LINKFLAGS', [
-			'-L/opt/local/lib'
-		])
+		if not conf.env.IOS:
+			conf.env.append_unique('DEFINES', [
+				'OSX=1', '_OSX=1'
+			])
+		else:
+			conf.env.append_unique('DEFINES', [
+				'IOS=1', '_IOS=1'
+			])
+		
+
 	elif conf.env.DEST_OS in ['freebsd', 'openbsd', 'netbsd', 'dragonflybsd']: # Tested only in freebsd
 		conf.env.append_unique('DEFINES', [
 			'POSIX=1', '_POSIX=1', 'PLATFORM_POSIX=1',
@@ -323,6 +336,12 @@ def options(opt):
 	# TODO(nillerusr): add wscript for opus building
 	grp.add_option('--enable-opus', action = 'store_true', dest = 'OPUS', default = False,
 		help = 'build engine with Opus voice codec [default: %default]')
+	
+	grp.add_option('--ios', action = 'store_true', dest = 'IOS', default = False,
+		help = 'build engine for iOS [default: %default]')
+	
+	grp.add_option('--angle', action = 'store_true', dest = 'ANGLE', default = False,
+		help = 'build engine with ANGLE instead of native OpenGLES [default: %default]')
 
 	grp.add_option('--sanitize', action = 'store', dest = 'SANITIZE', default = '',
 		help = 'build with sanitizers [default: %default]')
@@ -371,24 +390,31 @@ def check_deps(conf):
 				conf.check_cc(lib = i)
 
 	if conf.env.DEST_OS == "darwin":
-		conf.check(lib='iconv', uselib_store='ICONV')
-		conf.env.FRAMEWORK_APPKIT = "AppKit"
 		conf.env.FRAMEWORK_IOKIT = "IOKit"
 		conf.env.FRAMEWORK_FOUNDATION = "Foundation"
 		conf.env.FRAMEWORK_COREFOUNDATION = "CoreFoundation"
 		conf.env.FRAMEWORK_COREGRAPHICS = "CoreGraphics"
-		conf.env.FRAMEWORK_OPENGL = "OpenGL"
-		conf.env.FRAMEWORK_CARBON = "Carbon"
-		conf.env.FRAMEWORK_APPLICATIONSERVICES = "ApplicationServices"
-		conf.env.FRAMEWORK_CORESERVICES = "CoreServices"
 		conf.env.FRAMEWORK_COREAUDIO = "CoreAudio"
 		conf.env.FRAMEWORK_AUDIOTOOLBOX = "AudioToolbox"
 		conf.env.FRAMEWORK_SYSTEMCONFIGURATION = "SystemConfiguration"
-
+		conf.check(lib='iconv', uselib_store='ICONV')
+		if not conf.env.IOS:
+			conf.env.FRAMEWORK_APPKIT = "AppKit"
+			conf.env.FRAMEWORK_CARBON = "Carbon"
+			conf.env.FRAMEWORK_OPENGL = "OpenGL"
+			conf.env.FRAMEWORK_APPLICATIONSERVICES = "ApplicationServices"
+			conf.env.FRAMEWORK_CORESERVICES = "CoreServices"
+		else:
+			conf.env.FRAMEWORK_UIKIT = "UIKit"
+			conf.env.FRAMEWORK_CFNETWORK = "CFNetwork"
+			if not conf.env.ANGLE:
+				conf.env.FRAMEWORK_OPENGLES = "OpenGLES"
+			else:
+				conf.env.FRAMEWORK_OPENGLES = "libEGL"
 	if conf.options.TESTS:
 		return
 
-	if conf.env.DEST_OS != 'android':
+	if conf.env.DEST_OS != 'android' and not conf.env.IOS:
 		if conf.env.DEST_OS != 'win32':
 			if conf.options.SDL:
 				conf.check_cfg(package='sdl2', uselib_store='SDL2', args=['--cflags', '--libs'])
@@ -408,6 +434,17 @@ def check_deps(conf):
 
 			if conf.options.OPUS:
 				conf.check_cfg(package='opus', uselib_store='OPUS', args=['--cflags', '--libs'])
+	elif conf.env.IOS:
+		conf.check(lib='freetype2', uselib_store='FT2')
+		conf.check(lib='jpeg', uselib_store='JPEG', define_name='HAVE_JPEG')
+		conf.check(lib='png', uselib_store='PNG', define_name='HAVE_PNG')
+		conf.check(lib='curl', uselib_store='CURL', define_name='HAVE_CURL')
+		conf.check(lib='z', uselib_store='ZLIB', define_name='HAVE_ZLIB')
+		if not conf.env.TOGLES:
+			conf.check(lib='gl4es', uselib_store='GL')
+		conf.env.FRAMEWORK_OPENAL = "OpenAL"
+		conf.check(framework='CoreFoundation', uselib_store='COREFOUNDATION', msg='Checking for CoreFoundation')
+		conf.check(framework='OpenGLES', uselib_store='OPENGLES', msg='Checking for OpenGLES')
 	else:
 		conf.check(lib='SDL2', uselib_store='SDL2')
 		conf.check(lib='freetype2', uselib_store='FT2')
@@ -511,15 +548,18 @@ def configure(conf):
 	if conf.env.COMPILER_CC != 'msvc':
 		flags += ['-pthread']
 
-	if conf.env.DEST_OS == 'android':
+	if conf.env.DEST_OS == 'android' or conf.env.IOS:
 		flags += [
 			'-I'+os.path.abspath('.')+'/thirdparty/curl/include',
-			'-I'+os.path.abspath('.')+'/thirdparty/SDL',
-			'-I'+os.path.abspath('.')+'/thirdparty/openal-soft/include/',
 			'-I'+os.path.abspath('.')+'/thirdparty/fontconfig',
 			'-I'+os.path.abspath('.')+'/thirdparty/freetype/include',
-			'-llog',
-			'-lz'
+		]
+	if conf.env.DEST_OS == 'android':
+		flags += [
+			'-llog', 
+			'-I'+os.path.abspath('.')+'/thirdparty/openal-soft/include/',
+			'-lz',
+			'-I'+os.path.abspath('.')+'/thirdparty/SDL',
 		]
 
 		flags += ['-funwind-tables', '-g']
@@ -609,6 +649,12 @@ def configure(conf):
 	conf.env.append_unique('INCLUDES', [os.path.abspath('common/')])
 
 	check_deps( conf )
+
+	conf.load('sdl2')
+	if not conf.env.HAVE_SDL2:
+		conf.fatal("SDL2 isn't available")
+	else:
+		conf.env.append_unique('INCLUDES', conf.env.INCLUDES_SDL2)
 
 	# indicate if we are packaging for Linux/BSD
 	if conf.env.DEST_OS != 'android':

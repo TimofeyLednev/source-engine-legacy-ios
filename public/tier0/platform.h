@@ -78,11 +78,14 @@
 #include <time.h>
 #endif
 
-#ifdef OSX
+#ifdef APPLE
 #include <malloc/malloc.h>
 #else
 #include <malloc.h>
 #endif
+#if IOS
+#include "iosutils.h"
+#endif 
 #include <new>
 
 // need this for memset
@@ -273,8 +276,17 @@ typedef signed char int8;
 
 #ifdef _ANDROID
 	#define IsAndroid() true
+	#define IsMobile() true
 #else
 	#define IsAndroid()	false
+#endif
+
+#if _IOS
+	#define IsIOS() true
+	#define IsMobile() true
+#else
+	#define IsIOS() false
+	#define IsMobile() false
 #endif
 // From steam/steamtypes.h
 // RTime32
@@ -454,7 +466,7 @@ typedef void * HINSTANCE;
 #else
 	// On OSX, SIGTRAP doesn't really stop the thread cold when debugging.
 	// So if being debugged, use INT3 which is precise.
-#if defined(OSX) || defined(PLATFORM_BSD)
+#if defined(APPLE) || defined(PLATFORM_BSD)
 # if defined(__arm__) || defined(__aarch64__)
 #  ifdef __clang__
 #   define DebuggerBreak()  do { if ( Plat_IsInDebugSession() ) { __builtin_debugtrap(); } else { raise(SIGTRAP); } } while(0)
@@ -567,7 +579,7 @@ typedef void * HINSTANCE;
 	#define stackalloc( _size )		alloca( ALIGN_VALUE( _size, 16 ) )
 #if defined(_LINUX) || defined(PLATFORM_BSD)
 	#define mallocsize( _p )	( malloc_usable_size( _p ) )
-#elif defined(OSX)
+#elif defined(APPLE)
 	#define mallocsize( _p )	( malloc_size( _p ) )
 #else
 #error
@@ -777,7 +789,7 @@ typedef void * HINSTANCE;
 #pragma GCC diagnostic ignored "-Wswitch"				// enumeration values not handled in switch
 #endif
 
-#ifdef OSX
+#ifdef APPLE
 #pragma GCC diagnostic ignored "-Wconversion-null"			// passing NULL to non-pointer argument 1
 #pragma GCC diagnostic ignored "-Wnull-arithmetic"			// NULL used in arithmetic. Ie, vpanel == NULL where VPANEL is uint.
 #pragma GCC diagnostic ignored "-Wswitch-enum"				// enumeration values not handled in switch
@@ -1408,7 +1420,7 @@ PLATFORM_INTERFACE void* Plat_SimpleLog( const tchar* file, int line );
 //-----------------------------------------------------------------------------
 // Returns true if debugger attached, false otherwise
 //-----------------------------------------------------------------------------
-#if defined(_WIN32) || defined(LINUX) || defined(OSX) || defined(PLATFORM_BSD)
+#if defined(_WIN32) || defined(LINUX) || defined(APPLE) || defined(PLATFORM_BSD)
 PLATFORM_INTERFACE bool Plat_IsInDebugSession();
 PLATFORM_INTERFACE void Plat_DebugString( const char * );
 #else

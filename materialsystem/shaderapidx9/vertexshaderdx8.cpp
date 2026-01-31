@@ -3753,7 +3753,7 @@ CON_COMMAND( mat_shadercount, "display count of all shaders and reset that count
 #if defined( DX_TO_GL_ABSTRACTION )
 void	CShaderManager::DoStartupShaderPreloading()
 {
-#ifdef ANDROID // Too slow
+#if ANDROID  || IOS// Too slow
 	return;
 #endif
 

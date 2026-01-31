@@ -9,6 +9,7 @@
 // This is just a little redirection tool so I can get all the dlls in bin
 //-----------------------------------------------------------------------------
 
+#include "SDL2/SDL_filesystem.h"
 #ifdef _WIN32
 #include <windows.h>
 #include <stdio.h>
@@ -42,6 +43,7 @@ typedef int (*DedicatedMain_t)( int argc, char *argv[] );
 static char *GetBaseDir( const char *pszBuffer )
 {
 	static char	basedir[ MAX_PATH ];
+	#ifndef IOS
 	char szBuffer[ MAX_PATH ];
 	size_t j;
 	char *pBuffer = NULL;
@@ -65,8 +67,11 @@ static char *GetBaseDir( const char *pszBuffer )
 			basedir[ j-1 ] = 0;
 		}
 	}
+	#else
 
+	strcpy( basedir, SDL_GetBasePath());
 	return basedir;
+	#endif
 }
 
 #ifdef _WIN32

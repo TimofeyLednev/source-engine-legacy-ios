@@ -87,7 +87,7 @@ using namespace vgui;
 #include "tier1/utlstring.h"
 #include "steam/steam_api.h"
 
-#ifdef ANDROID
+#if ANDROID || IOS
 #include <SDL_misc.h>
 #endif
 
@@ -241,7 +241,7 @@ public:
 		if( GameUI().IsInLevel() ) return;
 
 		m_bSelected = false;
-#ifdef ANDROID
+#if ANDROID || IOS
 		if( m_szUrl ) SDL_OpenURL( m_szUrl );
 #endif
 
@@ -2343,7 +2343,7 @@ void CBasePanel::RunMenuCommand(const char *command)
 
 				RegCloseKey(hKey);
 			}
-#elif defined( OSX ) || defined( LINUX ) || defined(PLATFORM_BSD)
+#elif defined( APPLE ) || defined( LINUX ) || defined(PLATFORM_BSD)
 			FILE *fp = fopen( "/tmp/hl2_relaunch", "w+" );
 			if ( fp )
 			{

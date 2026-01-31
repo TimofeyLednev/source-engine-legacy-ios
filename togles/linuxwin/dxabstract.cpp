@@ -38,7 +38,7 @@
 
 #include "glmgr_flush.inl"
 
-#if defined(PLATFORM_BSD) || defined(OSX) || defined(LINUX) || (defined (WIN32) && defined( DX_TO_GL_ABSTRACTION ))
+#if defined(PLATFORM_BSD) || defined(APPLE) || defined(LINUX) || (defined (WIN32) && defined( DX_TO_GL_ABSTRACTION ))
 	#include "appframework/ilaunchermgr.h"
 	extern ILauncherMgr *g_pLauncherMgr;
 #endif
@@ -1252,7 +1252,7 @@ HRESULT IDirect3D9::GetAdapterIdentifier( UINT Adapter, DWORD Flags, D3DADAPTER_
 	bool result = db->GetFakeAdapterInfo( Adapter, &glmRendererIndex, &glmDisplayIndex, &glmRendererInfo, &glmDisplayInfo ); (void)result;
 	Assert (!result);
 
-#ifndef OSX
+#ifndef APPLE
 	if( glmRendererInfo.m_rendererID )
 #endif
 	{
@@ -1266,7 +1266,7 @@ HRESULT IDirect3D9::GetAdapterIdentifier( UINT Adapter, DWORD Flags, D3DADAPTER_
 			glmDisplayInfo.m_displayPixelWidth, glmDisplayInfo.m_displayPixelHeight,
 			glmRendererInfo.m_vidMemory >> 20 );
 	}
-#ifndef OSX
+#ifndef APPLE
 	else
 	{
 		static CDynamicFunctionOpenGL< true, const GLubyte *( APIENTRY *)(GLenum name), const GLubyte * > glGetString("glGetString");
@@ -1281,7 +1281,7 @@ HRESULT IDirect3D9::GetAdapterIdentifier( UINT Adapter, DWORD Flags, D3DADAPTER_
 			pszStringVendor, pszStringRenderer, pszStringVersion,
 			glmDisplayInfo.m_displayPixelWidth, glmDisplayInfo.m_displayPixelHeight );
 	}
-#endif // !OSX
+#endif // !APPLE
 
 	pIdentifier->VendorId				= glmRendererInfo.m_pciVendorID;	// 4318;
 	pIdentifier->DeviceId				= glmRendererInfo.m_pciDeviceID;	// 401;

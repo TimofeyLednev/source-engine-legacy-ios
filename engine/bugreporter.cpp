@@ -16,7 +16,7 @@
 #elif defined(POSIX)
 #include <sys/stat.h>
 
-#ifdef OSX
+#ifdef APPLE
 #include <copyfile.h>
 #import <mach/mach_host.h>
 #import <sys/sysctl.h>
@@ -108,7 +108,7 @@
 // Fixme, move these to buguiddata.res script file?
 #ifdef WIN32
 #define BUG_REPOSITORY_URL "\\\\fileserver\\bugs"
-#elif defined(OSX)
+#elif defined(APPLE)
 #define BUG_REPOSITORY_URL "/Volumes/bugs"
 #elif defined(LINUX) || defined(PLATFORM_BSD)
 #define BUG_REPOSITORY_URL "\\\\fileserver\\bugs"
@@ -144,7 +144,7 @@ unsigned long GetRam()
 	MEMORYSTATUS stat;
 	GlobalMemoryStatus( &stat );
 	return (stat.dwTotalPhys / (1024 * 1024));
-#elif defined(OSX) || defined(PLATFORM_BSD)
+#elif defined(APPLE) || defined(PLATFORM_BSD)
 	int mib[2] = { CTL_HW, HW_MEMSIZE };
 	u_int namelen = sizeof(mib) / sizeof(mib[0]);
 	uint64_t memsize;
@@ -351,6 +351,8 @@ void DisplaySystemVersion( char *osversion, int maxlen )
   #else
     osversion = (char *)"*BSD";
   #endif
+#elif IOS
+	osversion = (char *)"iOS";
 #endif
 }
 

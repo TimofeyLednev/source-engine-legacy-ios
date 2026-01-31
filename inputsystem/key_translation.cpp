@@ -224,7 +224,7 @@ static const char *s_pButtonCodeName[ ] =
 	"MWHEELUP",		// MOUSE_WHEEL_UP
 	"MWHEELDOWN",	// MOUSE_WHEEL_DOWN
 
-#if defined ( _X360 ) || defined ( _LINUX )
+#if defined ( _X360 ) || defined ( _LINUX ) || defined(_IOS)
 	"A_BUTTON",		// JOYSTICK_FIRST_BUTTON		
 	"B_BUTTON",		
 	"X_BUTTON",		

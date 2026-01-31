@@ -4,6 +4,7 @@
 //
 // $NoKeywords: $
 //===========================================================================//
+#include "SDL2/sdl_video.h"
 #define DISABLE_PROTECTED_THINGS
 
 #if defined( USE_SDL )
@@ -15,7 +16,7 @@
 #include <Psapi.h>
 #endif
 
-#if defined( OSX ) || defined(PLATFORM_BSD)
+#if defined( APPLE ) || defined(PLATFORM_BSD)
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
@@ -534,7 +535,7 @@ public:
 			FreeLibrary( hInst );
 		}
 
-#elif defined( OSX ) || defined(PLATFORM_BSD)
+#elif defined( APPLE ) || defined(PLATFORM_BSD)
 
 		static const struct
 		{

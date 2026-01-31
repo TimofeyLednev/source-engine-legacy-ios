@@ -28,6 +28,34 @@ ANDROID_NDK_SYSROOT_FLAG_MAX = 19 # latest NDK that need --sysroot flag
 ANDROID_NDK_API_MIN = { 10: 3, 19: 16, 20: 16 } # minimal API level ndk revision supports
 ANDROID_64BIT_API_MIN = 21 # minimal API level that supports 64-bit targets
 
+class iOS:
+	ctx = None
+	sdkpath = None
+	target = None
+	
+	def __init__(self, ctx, issim):
+		self.ctx = ctx
+		sdk = 'iphonesimulator' if issim else 'iphoneos'
+		self.sdkpath = ctx.cmd_and_log('xcrun --show-sdk-path --sdk %s' % sdk).strip()
+		self.target = '--target=aarch64-apple-ios'
+		if issim: self.target += '-simulator'
+	
+	def cflags(self, cxx = False):
+	
+		cflags = [ '-isysroot' + self.sdkpath, self.target, '-mios-version-min=12.0' ]
+		return cflags
+		
+	def linkflags(self):
+		
+		linkflags = [ '-isysroot' + self.sdkpath, self.target, '-mios-version-min=12.0', '-liconv', '-framework', 'CoreFoundation', '-L'+os.path.abspath('.')+'/lib/darwin/aarch64/' ]
+		return linkflags
+	
+	def cc(self):
+		return 'clang'
+
+	def cxx(self):
+		return 'clang++'
+
 # This class does support ONLY r10e and r19c/r20 NDK
 class Android:
 	ctx            = None # waf context
@@ -367,6 +395,20 @@ def configure(conf):
 
 		# conf.env.ANDROID_OPTS = android
 		conf.env.DEST_OS2 = 'android'
+	elif conf.options.IOS or conf.options.IOSSIM:
+		#issim = True if conf.options.IOSSIM else False
+		issim = False
+
+		conf.ios = ios = iOS(conf, issim)
+
+		conf.environ['CC'] = ios.cc()
+		conf.environ['CXX'] = ios.cxx()
+		
+		conf.env.CFLAGS += ios.cflags()
+		conf.env.CXXFLAGS += ios.cflags()
+		conf.env.LINKFLAGS += ios.linkflags()
+		conf.env.IOS = 1
+
 
 	MACRO_TO_DESTOS = OrderedDict({ '__ANDROID__' : 'android' })
 	for k in c_config.MACRO_TO_DESTOS:

@@ -35,7 +35,7 @@
 #include <sys/timer.h>
 #endif
 
-#ifdef OSX
+#ifdef APPLE
 // Add some missing defines
 #define PTHREAD_MUTEX_TIMED_NP         PTHREAD_MUTEX_NORMAL
 #define PTHREAD_MUTEX_RECURSIVE_NP     PTHREAD_MUTEX_RECURSIVE
@@ -319,7 +319,7 @@ PLATFORM_INTERFACE void ThreadSetAffinity( ThreadHandle_t hThread, int nAffinity
 #error Every platform needs to define ThreadMemoryBarrier to at least prevent compiler reordering
 #endif
 
-#if defined( _LINUX ) || defined( _OSX ) || defined(PLATFORM_BSD)
+#if defined( _LINUX ) || defined( _APPLE ) || defined(PLATFORM_BSD)
 #define USE_INTRINSIC_INTERLOCKED
 // linux implementation
 inline int32 ThreadInterlockedIncrement( int32 volatile *p )
@@ -520,7 +520,7 @@ PLATFORM_INTERFACE void ThreadNotifySyncReleasing(void *p);
 
 #ifndef NO_THREAD_LOCAL
 
-#if defined(WIN32) || defined(OSX) ||  defined( _PS3 ) || ( defined (_LINUX) ) || defined(PLATFORM_BSD)
+#if defined(WIN32) || defined(APPLE) ||  defined( _PS3 ) || ( defined (_LINUX) ) || defined(PLATFORM_BSD)
 #ifndef __AFXTLS_H__ // not compatible with some Windows headers
 
 #if defined(_PS3)
@@ -687,9 +687,9 @@ using namespace GenericThreadLocals;
 #endif
 
 
-#ifdef _OSX
+#ifdef _APPLE
 PLATFORM_INTERFACE GenericThreadLocals::CThreadLocalInt<int> g_nThreadID;
-#else // _OSX
+#else // _APPLE
 #ifndef TIER0_DLL_EXPORT
 
 #ifndef _PS3
@@ -697,7 +697,7 @@ DLL_GLOBAL_IMPORT CTHREADLOCALINT g_nThreadID;
 #endif // !_PS3
 
 #endif // TIER0_DLL_EXPORT
-#endif // _OSX
+#endif // _APPLE
 
 #endif /// afx32
 #endif //__win32

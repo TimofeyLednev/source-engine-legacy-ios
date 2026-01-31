@@ -27,6 +27,13 @@
 #include <string.h>
 #define MAX_PATH PATH_MAX
 #endif
+#if IOS
+#include <CoreFoundation/CoreFoundation.h>
+#include "SDL2/SDL.h"
+#include "tier0/iosutils.h"
+extern "C" void IOS_LaunchDialog( void );
+extern "C" int IOS_GetArgs( char ***out );
+#endif
 
 #include "tier0/basetypes.h"
 
@@ -235,10 +242,19 @@ int main( int argc, char *argv[] )
 		execve(argv[0], argv, environ);
 	}
 
+	#ifndef IOS
 	void *launcher = dlopen( "bin/liblauncher" DLL_EXT_STRING, RTLD_NOW );
-	if ( !launcher )
+	#else
+	IOS_LaunchDialog();
+	argc = IOS_GetArgs(&argv);
+	char basePath[MAX_PATH];
+	if (!CFURLGetFileSystemRepresentation(CFBundleCopyBundleURL(CFBundleGetMainBundle()), true, (UInt8 *)basePath, MAX_PATH)) return 0;
+	#endif
+	void *launcher = dlopen( strcat(basePath, "/bin/liblauncher.dylib"), RTLD_NOW );
+	if ( !launcher ) {
 		fprintf( stderr, "%s\nFailed to load the launcher\n", dlerror() );
-
+	}
+	
 	if( !launcher )
 		launcher = dlopen( "bin/launcher" DLL_EXT_STRING, RTLD_NOW );
 
@@ -248,14 +264,14 @@ int main( int argc, char *argv[] )
 		return 0;
 	}
 
-	LauncherMain_t main = (LauncherMain_t)dlsym( launcher, "LauncherMain" );
-	if ( !main )
+	LauncherMain_t launchermain = (LauncherMain_t)dlsym( launcher, "LauncherMain" );
+	if ( !launchermain )
 	{
 		fprintf( stderr, "Failed to load the launcher entry proc\n" );
 		return 0;
 	}
 
-#if defined(__clang__) && !defined(OSX)
+#if defined(__clang__) && !defined(APPLE)
 	// When building with clang we absolutely need the allocator to always
 	// give us 16-byte aligned memory because if any objects are tagged as
 	// being 16-byte aligned then clang will generate SSE instructions to move
@@ -294,7 +310,7 @@ int main( int argc, char *argv[] )
 
 	WaitForDebuggerConnect( argc, argv, 30 );
 
-	return main( argc, argv );
+	return launchermain( argc, argv );
 }
 
 #else

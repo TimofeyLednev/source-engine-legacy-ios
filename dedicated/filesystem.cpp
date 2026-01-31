@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include "interface.h"
 #include <string.h>
-#ifdef OSX
+#ifdef APPLE
 #include <malloc/malloc.h>
 #else
 #include <malloc.h>

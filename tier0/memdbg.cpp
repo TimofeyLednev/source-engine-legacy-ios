@@ -10,7 +10,7 @@
 
 #if !defined(STEAM) && !defined(NO_MALLOC_OVERRIDE)
 
-#ifdef OSX
+#ifdef APPLE
 #include <malloc/malloc.h>
 #else
 #include <malloc.h>
@@ -22,8 +22,7 @@
 #ifdef _WIN32
 #include <crtdbg.h>
 #endif
-#ifdef OSX
-#include <malloc/malloc.h>
+#ifdef APPLE
 #include <mach/mach.h>
 #include <stdlib.h>
 #endif

@@ -87,7 +87,7 @@ bool CPlugin::Load( const char *fileName )
 	Q_strncpy( fixedFileName, fileName, sizeof(fixedFileName) );
 	Q_FixSlashes( fixedFileName );
 
-#if defined ( OSX ) || defined( LINUX )
+#if defined ( APPLE ) || defined( LINUX )
 	// Linux doesn't check signatures, so in that case disable plugins on the client completely unless -insecure is specified
 	if ( !sv.IsDedicated() && Host_IsSecureServerAllowed() )
 		return false;

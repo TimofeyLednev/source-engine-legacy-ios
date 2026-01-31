@@ -23,7 +23,7 @@ extern ConVar default_fov;
 
 extern IMatSystemSurface *g_pMatSystemSurface;
 
-#ifdef ANDROID
+#if ANDROID || IOS
 #define TOUCH_DEFAULT "1"
 #else
 #define TOUCH_DEFAULT "0"
