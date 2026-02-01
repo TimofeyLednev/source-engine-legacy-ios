@@ -410,6 +410,7 @@ def check_deps(conf):
 		else:
 			conf.env.FRAMEWORK_UIKIT = "UIKit"
 			conf.env.FRAMEWORK_CFNETWORK = "CFNetwork"
+			conf.env.FRAMEWORK_SDL2 = "SDL2"
 			if not conf.env.ANGLE:
 				conf.env.FRAMEWORK_OPENGLES = "OpenGLES"
 			else:
@@ -660,7 +661,7 @@ def configure(conf):
 		conf.env.append_unique('INCLUDES', conf.env.INCLUDES_SDL2)
 
 	# indicate if we are packaging for Linux/BSD
-	if conf.env.DEST_OS != 'android':
+	if conf.env.DEST_OS != 'android' and not conf.env.IOS:
 		conf.env.LIBDIR = conf.env.PREFIX+'/bin/'
 		conf.env.TESTDIR = conf.env.PREFIX+'/tests/'
 		conf.env.BINDIR = conf.env.PREFIX

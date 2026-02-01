@@ -28,7 +28,6 @@
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 #include "EGL/eglext_angle.h"
-#include "tier0/iosutils.h"
 #include "SDL2/SDL_rect.h"
 #include "SDL2/sdl_video.h"
 #include "SDL2/SDL_syswm.h"
@@ -238,7 +237,7 @@ void *VoidFnPtrLookup_GlMgr(const char *fn, bool &okay, const bool bRequired, vo
 	// The SDL path would work on all these platforms, if we were using SDL there, too...
 
 
-#if defined ANDROID || defined TOGLES && ( !defined IOS || defined ANGLE)
+#if defined ANDROID || defined TOGLES && ( !defined IOS || defined ANGLE )
 	// SDL does the right thing, so we never need to use tier0 in this case.
 	if( _glGetProcAddress )
 	{
@@ -960,7 +959,7 @@ bool CSDLMgr::CreateHiddenGameWindow( const char *pTitle, int width, int height 
     void *renderLayer = SDL_Metal_GetLayer(metalView); 
 
 	EGLint surface_attributes[] = {
-    EGL_RENDER_BUFFER, EGL_BACK_BUFFER, // Enable double buffering
+    EGL_RENDER_BUFFER, EGL_BACK_BUFFER, 
     EGL_NONE
 	};
 

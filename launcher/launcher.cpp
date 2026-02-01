@@ -270,11 +270,6 @@ void UTIL_ComputeBaseDir()
 {
 	g_szBasedir[0] = 0;
 
-	#if IOS
-	strcpy(g_szBasedir, IOS_GetDocsDir());
-	g_szBasedir[strlen(g_szBasedir)+1] = 0;
-	#endif
-
 	if ( IsX360() )
 	{
 		char const *pBaseDir = CommandLine()->ParmValue( "-basedir" );
@@ -1568,7 +1563,7 @@ DLL_EXPORT int LauncherMain( int argc, char **argv )
 		RegCloseKey(hKey);
 	}
 
-#elif defined( APPLE ) || defined( LINUX ) || defined(PLATFORM_BSD)
+#elif defined( OSX ) || defined( LINUX ) || defined(PLATFORM_BSD)
 	struct stat st;
 	if ( stat( RELAUNCH_FILE, &st ) == 0 ) 
 	{
@@ -1590,15 +1585,13 @@ DLL_EXPORT int LauncherMain( int argc, char **argv )
 				#else
 					Q_snprintf( szOpenLine, sizeof(szOpenLine), "open \"%s\"", szCmd );
 				#endif
-				#ifndef IOS
 				system( szOpenLine );
-				#endif
 			}
 			fclose( fp );
 			unlink( RELAUNCH_FILE );
 		}
 	}
-#elif defined( _X360 )
+#elif defined( _X360 ) || defined( IOS )
 #else
 #error
 #endif

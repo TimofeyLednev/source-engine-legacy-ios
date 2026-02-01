@@ -18,8 +18,6 @@ def options(opt):
 def configure(conf):
 	conf.define('WAF_CFLAGS', conf.env.CFLAGS)
 	conf.define('WAF_LDFLAGS', conf.env.LINKFLAGS)
-	if conf.env.IOS:
-		conf.env.append_unique('CFLAGS', '-objc')
 	conf.define('TIER0_DLL_EXPORT',1)
 #	conf.define('NO_HOOK_MALLOC',1)
 
@@ -75,8 +73,6 @@ def build(bld):
 			'pme_posix.cpp',
 			'vcrmode_posix.cpp'
 		]
-	if bld.env.IOS:
-		source += ['ios/iosutils.m']
 
 	includes = [
 		'.',
@@ -90,8 +86,6 @@ def build(bld):
 		libs = ['ADVAPI32', 'WS2_32']
 	else:
 		libs = ['DL', 'M', 'LOG']
-	if bld.env.IOS:
-		libs += ['FOUNDATION', 'UIKIT', 'OBJC', 'COREGRAPHICS', 'AVFOUNDATION']
 
 	install_path = None if bld.env.BUILD_SDK else bld.env.LIBDIR
 

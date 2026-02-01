@@ -253,7 +253,7 @@ void CAudioDeviceSDLAudio::OpenWaveOut( void )
 	AllocateOutputBuffers();
 	SDL_PauseAudioDevice(m_devId, 0);
 
-#if defined( BINK_VIDEO ) && (defined( LINUX ) || defined( IOS ))
+#if defined( BINK_VIDEO ) && defined( LINUX )
 	// Tells Bink to use SDL for its audio decoding
 	if ( g_pVideo != NULL) 
 	{

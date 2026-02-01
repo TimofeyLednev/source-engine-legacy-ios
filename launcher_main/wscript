@@ -12,7 +12,6 @@ def options(opt):
 	return
 
 def configure(conf):
-	conf.env.append_unique('LDFLAGS', ['-framework', os.path.abspath('.')+'/lib/darwin/aarch64/SDL2.framework/SDL2'])
 	return
 
 def build(bld):
@@ -30,13 +29,8 @@ def build(bld):
 		libs += ['USER32', 'SHELL32']
 		source += ['launcher_main.rc']
 	if bld.env.IOS:
-		source += ['SDL_uikit_main.c']
-		#remove this lib
-		libs += ['tier0']
-	if bld.env.IOS:
-		source += [ 
-			'ios/Launchdiag.m'
-		]
+		source += ['SDL_uikit_main.c', 'ios/Launchdiag.m']
+		libs += ['FOUNDATION', 'UIKIT', 'OBJC', 'COREGRAPHICS', 'AVFOUNDATION', 'SDL2']
 
 	install_path = bld.env.BINDIR
 	bld(

@@ -5035,7 +5035,7 @@ CSysModule *CBaseFileSystem::LoadModule( const char *pFileName, const char *pPat
 	CSysModule *pModule = NULL;
 
 	LogFileAccess( pFileName );
-	if ( !pPathID || !Q_strcmp(pPathID, "GAMEBIN") )
+	if ( !pPathID )
 	{
 		pPathID = "EXECUTABLE_PATH"; // default to the bin dir
 	}

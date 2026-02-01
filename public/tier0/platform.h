@@ -83,9 +83,6 @@
 #else
 #include <malloc.h>
 #endif
-#if IOS
-#include "iosutils.h"
-#endif 
 #include <new>
 
 // need this for memset

@@ -27,11 +27,10 @@
 #include <string.h>
 #define MAX_PATH PATH_MAX
 #endif
-#if IOS
-#include <CoreFoundation/CoreFoundation.h>
+#ifdef IOS
 #include "SDL2/SDL.h"
-#include "tier0/iosutils.h"
 extern "C" void IOS_LaunchDialog( void );
+extern "C" const char *IOS_GetExecDir( void );
 extern "C" int IOS_GetArgs( char ***out );
 #endif
 
@@ -247,10 +246,10 @@ int main( int argc, char *argv[] )
 	#else
 	IOS_LaunchDialog();
 	argc = IOS_GetArgs(&argv);
-	char basePath[MAX_PATH];
-	if (!CFURLGetFileSystemRepresentation(CFBundleCopyBundleURL(CFBundleGetMainBundle()), true, (UInt8 *)basePath, MAX_PATH)) return 0;
+	char basePath[PATH_MAX];
+	strncpy(basePath, IOS_GetExecDir(), sizeof(basePath));
+	void *launcher = dlopen( strcat(basePath, "/liblauncher.dylib"), RTLD_NOW );
 	#endif
-	void *launcher = dlopen( strcat(basePath, "/bin/liblauncher.dylib"), RTLD_NOW );
 	if ( !launcher ) {
 		fprintf( stderr, "%s\nFailed to load the launcher\n", dlerror() );
 	}

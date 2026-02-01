@@ -43,7 +43,6 @@ typedef int (*DedicatedMain_t)( int argc, char *argv[] );
 static char *GetBaseDir( const char *pszBuffer )
 {
 	static char	basedir[ MAX_PATH ];
-	#ifndef IOS
 	char szBuffer[ MAX_PATH ];
 	size_t j;
 	char *pBuffer = NULL;
@@ -67,11 +66,6 @@ static char *GetBaseDir( const char *pszBuffer )
 			basedir[ j-1 ] = 0;
 		}
 	}
-	#else
-
-	strcpy( basedir, SDL_GetBasePath());
-	return basedir;
-	#endif
 }
 
 #ifdef _WIN32

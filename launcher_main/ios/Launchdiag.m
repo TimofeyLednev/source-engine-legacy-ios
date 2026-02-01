@@ -1,7 +1,23 @@
+/*
+ Launchdialog.m - iOS lauch dialog
+ Copyright (C) 2016 mittorn
+ 
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ */
+
 #import <Foundation/Foundation.h>
+#include <stdlib.h>
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
-#include "tier0/iosutils.h"
+#include <limits.h>
 
 @interface XashPromptAlertViewDelegate : NSObject <UIAlertViewDelegate>
 
@@ -37,6 +53,36 @@ typedef struct settings_s
 @end
 @implementation ButtonHandler
 
+const char *IOS_GetDocsDir(void)
+{
+	static const char *dir = NULL;
+	
+	if( dir )
+		return dir;
+	
+	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+	NSString *documentsDirctory = [paths objectAtIndex:0];
+	[[NSFileManager defaultManager] createDirectoryAtPath:documentsDirctory withIntermediateDirectories:YES attributes:nil error:nil];
+	
+	dir = [documentsDirctory fileSystemRepresentation];
+	NSLog(@"IOS_GetDocsDir: %s", dir);
+	
+	return dir;
+}
+
+const char *IOS_GetExecDir(void)
+{
+	static const char *dir = NULL;
+	
+	if( dir )
+		return dir;
+
+	dir = [[[NSBundle mainBundle] bundleURL] fileSystemRepresentation];
+	NSLog(@"IOS_GetExecDir: %s", dir);
+	
+	return dir;
+}
+
 -(void) buttonClicked:(UIButton*)sender
 {
 	*_button1 = 0;
@@ -71,6 +117,14 @@ void IOS_LaunchDialog( void )
 	NSLog(@"System Version is %@",[[UIDevice currentDevice] systemVersion]);
 	NSString *ver = [[UIDevice currentDevice] systemVersion];
 	g_iOSVer = [ver floatValue];
+
+	char exec_dir[PATH_MAX];
+	strcpy(exec_dir, IOS_GetExecDir());
+	setenv("APP_LIB_PATH", exec_dir, 1);
+	setenv("APP_MOD_LIB", exec_dir, 1);
+	strcat(exec_dir, "/extras_dir.vpk");
+	setenv("EXTRAS_VPK_PATH", exec_dir, 1);
+	setenv("VALVE_GAME_PATH", IOS_GetDocsDir(), 1);
 
 	//request microphone permissions otherwise we will crash when joining an online server
 	//[[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted){}];

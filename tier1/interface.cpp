@@ -40,10 +40,6 @@
 #include <sys/stat.h>
 #endif
 
-#if IOS
-#include <CoreFoundation/CoreFoundation.h>
-#endif
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -332,11 +328,7 @@ CSysModule *Sys_LoadModule( const char *pModuleName, Sys_Flags flags /* = SYS_NO
 	if ( !Q_IsAbsolutePath( pModuleName ) )
 	{
 		// full path wasn't passed in, using the current working dir
-		#ifndef IOS
 		_getcwd( szCwd, sizeof( szCwd ) );
-		#else
-		if (!CFURLGetFileSystemRepresentation(CFBundleCopyBundleURL(CFBundleGetMainBundle()), true, (UInt8 *)szCwd, 1024)) return 0;		
-		#endif
 		if ( IsX360() )
 		{
 			int i = CommandLine()->FindParm( "-basedir" );
@@ -352,7 +344,7 @@ CSysModule *Sys_LoadModule( const char *pModuleName, Sys_Flags flags /* = SYS_NO
 		}
 
 		char szAbsoluteModuleName[2048];
-#ifdef ANDROID
+#if ANDROID || IOS
 		char *libPath = getenv("APP_LIB_PATH");
 		char *modLibPath = getenv("APP_MOD_LIB");
 		bool bFound;

@@ -396,8 +396,7 @@ def configure(conf):
 		# conf.env.ANDROID_OPTS = android
 		conf.env.DEST_OS2 = 'android'
 	elif conf.options.IOS or conf.options.IOSSIM:
-		#issim = True if conf.options.IOSSIM else False
-		issim = False
+		issim = True if conf.options.IOSSIM else False
 
 		conf.ios = ios = iOS(conf, issim)
 
