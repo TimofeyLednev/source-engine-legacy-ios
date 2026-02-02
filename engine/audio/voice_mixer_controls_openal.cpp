@@ -9,6 +9,8 @@
 #ifdef OSX
 #include <Carbon/Carbon.h>
 #include <CoreAudio/CoreAudio.h>
+#elif IOS
+#include <AudioToolbox/AudioToolbox.h>
 #endif
 
 #include "tier0/platform.h"

@@ -270,7 +270,7 @@ FORCEINLINE void GLMContext::FlushDrawStates( uint nStartIndex, uint nEndIndex, 
 
 			GL_BATCH_PERF( m_FlushStats.m_nNumSamplingParamsChanged++ );
 
-#if defined( OSX ) // valid for OSX only if using GL 3.3 context 
+#if defined( APPLE ) // valid for OSX only if using GL 3.3 context 
 			CGLMTex *pTex = m_samplers[nSamplerIndex].m_pBoundTex;
 
 			if( pTex && !( gGL->m_bHave_GL_EXT_texture_sRGB_decode ) )

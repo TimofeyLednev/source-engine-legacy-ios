@@ -52,6 +52,7 @@ ConVar rawinput_set_one_time( "rawinput_set_one_time", "0", FCVAR_ARCHIVE|FCVAR_
 
 #if ANGLE
 #define SDL_GL_SwapWindow(x) eglSwapBuffers(native_display, surface)
+#define SDL_GL_SetSwapInterval(x) eglSwapInterval(native_display, x)
 #endif
 
 ConVar gl_blit_halfx( "gl_blit_halfx", "0" );
@@ -925,7 +926,7 @@ bool CSDLMgr::CreateHiddenGameWindow( const char *pTitle, int width, int height 
 
 	EGLint attribs[] = {
     EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
-	EGL_SURFACE_TYPE, EGL_WINDOW_BIT, // Or 3
+	EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
     EGL_BLUE_SIZE, 8,
     EGL_GREEN_SIZE, 8,
     EGL_RED_SIZE, 8,

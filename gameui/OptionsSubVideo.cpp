@@ -1178,7 +1178,7 @@ void COptionsSubVideo::PrepareResolutionList()
 
 	// Clean up before filling the info again.
 	m_pMode->DeleteAllItems();
-#if !ANDROID || !IOS
+#ifndef ANDROID
 	m_pAspectRatio->SetItemEnabled(1, false);
 	m_pAspectRatio->SetItemEnabled(2, false);
 #endif
@@ -1233,6 +1233,7 @@ void COptionsSubVideo::PrepareResolutionList()
 		// don't show modes bigger than the desktop for windowed mode
 		if ( bWindowed )
 #endif
+#ifndef IOS
 		{
 			if ( plist->width > desktopWidth || plist->height > desktopHeight )
 			{
@@ -1240,13 +1241,14 @@ void COptionsSubVideo::PrepareResolutionList()
 				continue;
 			}
 		}
+#endif
 
 		GetResolutionName( plist, sz, sizeof( sz ), desktopWidth, desktopHeight );
 
 		int itemID = -1;
 
 		int iAspectMode = GetScreenAspectMode( plist->width, plist->height );
-#if !ANDROID || !IOS
+#if !ANDROID && !IOS
 		if ( iAspectMode > 0 )
 		{
 			m_pAspectRatio->SetItemEnabled( iAspectMode, true );
@@ -1278,7 +1280,7 @@ void COptionsSubVideo::PrepareResolutionList()
 	}
 
 	// disable ratio selection if we can't display widescreen.
-#if !ANDROID || !IOS
+#if !ANDROID && !IOS
 	m_pAspectRatio->SetEnabled( bFoundWidescreen );
 #endif
 
@@ -1407,7 +1409,7 @@ void COptionsSubVideo::OnResetData()
 #endif
 
 	// reset gamma control
-#if ANDROID || IOS
+#if ANDROID
 	m_pGammaButton->SetEnabled( false );
 #else
 	m_pGammaButton->SetEnabled( !config.Windowed() );
@@ -1611,7 +1613,7 @@ void COptionsSubVideo::PerformLayout()
 
 	if ( m_pGammaButton )
 	{
-#if ANDROID || IOS
+#if ANDROID
 		m_pGammaButton->SetEnabled( false );
 #else
 		const MaterialSystem_Config_t &config = materials->GetCurrentConfigForVideoCard();
@@ -1638,7 +1640,7 @@ void COptionsSubVideo::OnTextChanged(Panel *pPanel, const char *pszText)
             OnDataChanged();
         }
     }
-#if !ANDROID || IOS
+#if !ANDROID
 	else if (pPanel == m_pAspectRatio)
 	{
 		PrepareResolutionList();

@@ -35,7 +35,7 @@ int TouchSDLWatcher( void *userInfo, SDL_Event *event )
             if (!fingers[i].active) {
                 fingers[i].id = sdlId;
                 fingers[i].active = true;
-				printf("Finger %d down, with id %d\n", i, sdlId);
+				//printf("Finger %d down, with id %d\n", i, sdlId);
 				pInputSystem->FingerEvent( IE_FingerDown, i, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
 				break;
             }
@@ -47,7 +47,7 @@ int TouchSDLWatcher( void *userInfo, SDL_Event *event )
                 fingers[i].active = false;
                 fingers[i].id = 0;
 				pInputSystem->FingerEvent( IE_FingerUp, i, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
-                printf("Finger %d lifted, with id %d\n", i, sdlId);
+                //printf("Finger %d lifted, with id %d\n", i, sdlId);
 				break;
             }
         }
@@ -56,7 +56,7 @@ int TouchSDLWatcher( void *userInfo, SDL_Event *event )
 		for (int i = 0; i < TOUCH_FINGER_MAX_COUNT; ++i) {
         	if (fingers[i].active && fingers[i].id == sdlId) {
 				pInputSystem->FingerEvent( IE_FingerMotion ,i, event->tfinger.x, event->tfinger.y, event->tfinger.dx, event->tfinger.dy );
-				printf("Finger %d moved, with id %d\n", i, sdlId);
+				//printf("Finger %d moved, with id %d\n", i, sdlId);
 				break;
         	}
         }

@@ -448,7 +448,6 @@ def check_deps(conf):
 			conf.check(lib='gl4es', uselib_store='GL')
 		conf.env.FRAMEWORK_OPENAL = "OpenAL"
 		conf.check(framework='CoreFoundation', uselib_store='COREFOUNDATION', msg='Checking for CoreFoundation')
-		conf.check(framework='OpenGLES', uselib_store='OPENGLES', msg='Checking for OpenGLES')
 	else:
 		conf.check(lib='SDL2', uselib_store='SDL2')
 		conf.check(lib='freetype2', uselib_store='FT2')

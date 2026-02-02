@@ -4,7 +4,6 @@
 //
 // $NoKeywords: $
 //===========================================================================//
-#include "SDL2/sdl_video.h"
 #define DISABLE_PROTECTED_THINGS
 
 #if defined( USE_SDL )

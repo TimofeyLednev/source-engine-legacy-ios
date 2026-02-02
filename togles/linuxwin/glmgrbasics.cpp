@@ -3536,7 +3536,7 @@ void	CGLMFileMirror::OpenInEditor( bool foreground )
 	// pass -b if no desire to bring editor to foreground
 	sprintf(temp,"/usr/bin/bbedit %s %s", foreground ? "" : "-b", m_path );
 	system( temp );
-	#endif	//potentially replace?
+	#endif
 }
 
 

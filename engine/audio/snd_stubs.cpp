@@ -7,7 +7,7 @@
 
 #include "audio/public/voice.h"
 
-#if !defined( DEDICATED ) && ( defined( OSX ) || defined( _WIN32 ) ) && !defined( NO_STEAM )
+#if !defined( DEDICATED ) && ( defined( APPLE ) || defined( _WIN32 ) ) && !defined( NO_STEAM )
 #include "cl_steamauth.h"
 #endif
 
@@ -21,7 +21,7 @@ CEngineVoiceStub *Audio_GetEngineVoiceStub()
 }
 
 
-#if !defined( DEDICATED ) && ( defined( OSX ) || defined( _WIN32 ) ) && !defined( NO_STEAM )
+#if !defined( DEDICATED ) && ( defined( APPLE ) || defined( _WIN32 ) ) && !defined( NO_STEAM )
 
 class CEngineVoiceSteam : public IEngineVoice
 {

@@ -7,7 +7,9 @@
 //=============================================================================//
 // This module implements the voice record and compression functions 
 
+#ifndef IOS
 #include <Carbon/Carbon.h>
+#endif
 #include <AudioUnit/AudioUnit.h>
 #include <AudioToolbox/AudioToolbox.h>
 

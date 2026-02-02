@@ -7,19 +7,10 @@
 // $NoKeywords: $
 //=============================================================================//
 
-//#include <Cocoa/Cocoa.h>
 #include "GL/gl.h"
-#import <OpenGLES/EAGL.h>
-//#import <OpenGLES/ES3/gl.h>
-//#import <OpenGLES/ES3/glext.h>
-#import <CoreGraphics/CGLayer.h>
-#import <CoreGraphics/CoreGraphics.h>
-#include <IOKit/IOKitLib.h>
-
 
 #undef MIN
 #undef MAX
-#define DONT_DEFINE_BOOL	// Don't define BOOL!
 #include "tier0/threadtools.h"
 #include "tier0/icommandline.h"
 #include "tier1/interface.h"
@@ -30,62 +21,23 @@
 #include "appframework/IAppSystemGroup.h"
 #include "inputsystem/ButtonCode.h"
 
-
-// some helper functions, relocated out of GLM since they are used here
-
-// this one makes a new context
-bool	GLMDetectSLGU( void );
-bool	GLMDetectSLGU( void )
-{
-	return true;
-}
-
-
-bool	GLMDetectScaledResolveMode( uint osComboVersion, bool hasSLGU );
-bool	GLMDetectScaledResolveMode( uint osComboVersion, bool hasSLGU )
-{
-	return false; 
-}
-
 //===============================================================================
 
 GLMRendererInfo::GLMRendererInfo( GLMRendererInfoFields *info )
 {
-	NSAutoreleasePool	*tempPool = [[NSAutoreleasePool alloc] init ];
 
 	// absorb info obtained so far by caller
 	m_info = *info;
 	m_displays = NULL;
-
-	// gather more info using a dummy context
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); // Standard depth for Source
-	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-
-	EAGLContext	*nsglCtx	=	[[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3 ];
-
-
-	[EAGLContext setCurrentContext:nsglCtx];
 		
 	// run queries.
-	char *gl_ext_string = (char*)glGetString(GL_EXTENSIONS);
+	char *gl_ext_string = (char*)gGL->glGetString(GL_EXTENSIONS);
 
 	uint vers = m_info.m_osComboVersion;
 	// avoid crashing due to strstr'ing NULL pointer returned from glGetString
 	if (!gl_ext_string)
 	  gl_ext_string = "";
 
-	// effectively blacklist the renderer if it doesn't actually work; sort it to back of list
-	if ( !nsglCtx )
-	{
-		m_info.m_vidMemory = 1;
-		m_info.m_texMemory = 1;
-	}
 	
 	//-------------------------------------------------------------------
 	// booleans
@@ -118,19 +70,7 @@ GLMRendererInfo::GLMRendererInfo( GLMRendererInfoFields *info )
 	//-------------------------------------------------------------------
 	m_info.m_hasNewFullscreenMode = true;
 	//-------------------------------------------------------------------
-	m_info.m_hasNativeClipVertexMode = true;
-	// this one uses a heuristic, and allows overrides in case the heuristic is wrong
-	// or someone wants to try a beta driver or something.
-
-	// known bad combinations get turned off here..
-	
-	// any ATI hardware...
-	// TURNED OFF OS CHECK if (m_info.m_osComboVersion <= 0x000A0603)
-	// still believe to be broken in 10.6.4
-	m_info.m_hasNativeClipVertexMode = false;
-
-	// R500, forever..
-	m_info.m_hasNativeClipVertexMode = false;
+	m_info.m_hasNativeClipVertexMode = false; //seems to cause some bugs with reflections when enabled?
 
 	// if user disabled them
 	if (CommandLine()->FindParm("-glmdisableclipplanes"))
@@ -159,7 +99,7 @@ GLMRendererInfo::GLMRendererInfo( GLMRendererInfoFields *info )
 	}
 	
 	//-------------------------------------------------------------------
-	m_info.m_maxAniso = 4;			//FIXME needs real query
+	m_info.m_maxAniso = 16;			//FIXME needs real query
 	
 	//-------------------------------------------------------------------
 	m_info.m_hasBindableUniforms = true;
@@ -179,7 +119,7 @@ GLMRendererInfo::GLMRendererInfo( GLMRendererInfoFields *info )
 	//-------------------------------------------------------------------
 	// test for performance pack (10.6.4+)
 
-	bool perfPackageDetected = GLMDetectSLGU();
+	bool perfPackageDetected = true;
 	
 	if (perfPackageDetected)
 	{
@@ -215,8 +155,6 @@ GLMRendererInfo::GLMRendererInfo( GLMRendererInfoFields *info )
 		m_info.m_cantBlitReliably = true;			// we do not trust the blit, so set the cant-blit cap to true
 	}
 
-	//m_info.m_cantAttachSRGB = (m_info.m_nv && m_info.m_osComboVersion < 0x000A0600);	//NV drivers won't accept SRGB tex on an FBO color target in 10.5.8
-	//m_info.m_cantAttachSRGB = (m_info.m_ati && m_info.m_osComboVersion < 0x000A0600);	//... does ATI have the same problem?
 	m_info.m_cantAttachSRGB = false;	// across the board on 10.5.x actually..
 
 	// MSAA resolve issues
@@ -232,9 +170,6 @@ GLMRendererInfo::GLMRendererInfo( GLMRendererInfoFields *info )
 	// in 10.9 (and unlikely to be fixed in 10.8). See intelglmallocworkaround.h for more info.
 	m_info.m_badDriver108Intel = false;
 
-	[nsglCtx release];
-	
-	[tempPool release];
 }
 
 GLMRendererInfo::~GLMRendererInfo( void )
@@ -417,125 +352,9 @@ extern "C" int RendererInfoSortFunction( GLMRendererInfo * const *A, GLMRenderer
 		return smaller;
 	}
 	
-	/*
-		// this was not a great idea here..
-		
-		// check if one has the main screen - is that index 0 in all cases?
-		uint maskOfMainDisplay = CGDisplayIDToOpenGLDisplayMask( CGMainDisplayID() );
-		Assert( maskOfMainDisplay==1 );	// just curious
-		
-		int mainscreena = (*A)->m_info.m_displayMask & maskOfMainDisplay;
-		int mainscreenb = (*B)->m_info.m_displayMask & maskOfMainDisplay;
-		
-		if ( mainscreena > mainscreenb )
-		{
-			return bigger;
-		}
-		else if ( mainscreena < mainscreenb )
-		{
-			return smaller;
-		}
-	*/
-	
+
 	return 0;	// equal rank
 }
-
-/** some code that NV gave us.  more generalized approach below..
-
-		static io_registry_entry_t lookup_dev_NV(char *name)
-		{
-			mach_port_t master_port = 0;
-			io_iterator_t iterator;
-			io_registry_entry_t nub = 0;
-			kern_return_t ret;
-
-			IOMasterPort(MACH_PORT_NULL, &master_port);
-
-			ret = IOServiceGetMatchingServices(master_port, IOServiceMatching(name), &iterator);
-
-			if (iterator) {
-				nub = IOIteratorNext(iterator);
-
-				if (IOIteratorNext(iterator)) {
-					printf("warning: more than one card?\n");
-				}
-				IOObjectRelease(iterator);
-			}
-			IOObjectRelease(master_port);
-
-			return nub;
-		}
-
-
-		void	GetDriverInfoString_NV( char *driverNameBuf, int driverNameBufLen )
-		{
-			// courtesy NVIDIA dev rel
-			
-			io_registry_entry_t registry;
-			kern_return_t ret;
-
-			//
-			// Get NVKernel / IOGLBundleName
-			//
-
-			registry = lookup_dev_NV("NVKernel");
-			if (!registry) {
-				fprintf(stderr, "error: could not find NVKernel IORegistry entry!\n");
-				return;
-			}
-
-			CFMutableDictionaryRef entry;
-			ret = IORegistryEntryCreateCFProperties(registry, &entry, kCFAllocatorDefault, 0);
-			if (ret != kIOReturnSuccess) {
-				fprintf(stderr, "error: could not create CFProperties dictionary!\n");
-				return;
-			}
-
-			CFStringRef bundle_name_ref = (CFStringRef) CFDictionaryGetValue(entry, CFSTR("IOGLBundleName"));
-			if (!bundle_name_ref) {
-				fprintf(stderr, "error: could not get IOGLBundleName reference!\n");
-				return;
-			}
-
-			const char *bundle_name = CFStringGetCStringPtr(bundle_name_ref, CFStringGetSystemEncoding());
-			if (!bundle_name) {
-				fprintf(stderr, "error: could not get IOGLBundleName!\n");
-				return;
-			}
-
-			CFStringRef identifier = CFStringCreateWithFormat(NULL, NULL, CFSTR("com.apple.%s"), bundle_name);
-
-			//
-			// Get bundle information
-			//
-
-			CFBundleRef bundle;
-			bundle = CFBundleGetBundleWithIdentifier(identifier);
-			if (!bundle) {
-				fprintf(stderr, "error: could not get GL driver bundle!\n");
-				return;
-			}
-
-			CFDictionaryRef dict;
-			CFStringRef info;
-
-			dict = CFBundleGetInfoDictionary(bundle);
-			if (!dict) {
-				fprintf(stderr, "error: could not get bundle info dictionary!\n");
-				return;
-			}
-
-			info = (CFStringRef) CFDictionaryGetValue(dict, CFSTR("CFBundleGetInfoString"));
-			if (!info) {
-				fprintf(stderr, "error: could not get CFBundleGetInfoString!\n");
-				return;
-			}
-
-			CFStringGetCString(info, driverNameBuf, driverNameBufLen, CFStringGetSystemEncoding());
-
-			IOObjectRelease(registry);
-		}
-**/
 
 void	GLMDisplayDB::PopulateRenderers( void )
 {
@@ -850,30 +669,26 @@ void GLMDisplayInfo::PopulateModes( void )
     m_modes = new CUtlVector< GLMDisplayMode* >;
     
     int rw, rh;
+	SDL_DisplayMode mode;
     SDL_GetWindowSizeInPixels(SDL_GetWindowFromID(1), &rw, &rh);
+	SDL_GetCurrentDisplayMode(0, &mode);
+	//SDL_GetWindowSize(SDL_GetWindowFromID(1), &w, &h);
+	float scale = (float)rw / mode.w;
     
-    GLMDisplayMode *nativeMode = new GLMDisplayMode( (long)rw, (long)rh, 60 );
+	//hardcode all the modes we want to be available
+	GLMDisplayMode *nativeMode = new GLMDisplayMode( rw, rh, mode.refresh_rate );
     m_modes->AddToTail( nativeMode );
+	GLMDisplayMode *unscaled = new GLMDisplayMode( mode.w, mode.h, mode.refresh_rate );
+    m_modes->AddToTail( unscaled );
+	/*GLMDisplayMode *doubleunscaled = new GLMDisplayMode( mode.w * 2, mode.h * 2, mode.refresh_rate );
+    m_modes->AddToTail( doubleunscaled );*/
+	//for people with iPhone 69 pro max ultra 8k
+	//actually bad idea as it might default to it
+	/*GLMDisplayMode *fourtimesunscaled= new GLMDisplayMode( mode.w * scale + 1, mode.h * scale + 1, mode.refresh_rate );
+    m_modes->AddToTail( fourtimesunscaled );*/
 
-    int displayIndex = (int)m_info.m_cgDisplayID;
-    int modeCount = SDL_GetNumDisplayModes(displayIndex);
-    
-    for (int i = 0; i < modeCount; i++) 
-    {
-        SDL_DisplayMode mode;
-        if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) 
-        {
-            int modeWidth = mode.w;
-            int modeHeight = mode.h;
-            int refreshRate = mode.refresh_rate > 0 ? mode.refresh_rate : 60;
-
-            if ( (modeHeight >= 384) && (modeWidth >= 512) )
-            {
-                GLMDisplayMode *newmode = new GLMDisplayMode( (long)modeWidth, (long)modeHeight, (long)refreshRate );
-                m_modes->AddToTail( newmode );
-            }
-        }
-    }
+    int displayIndex = 0;
+    int modeCount = 5;
 
     m_modes->Sort( DisplayModeSortFunction );
 }

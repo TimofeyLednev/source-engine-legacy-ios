@@ -228,7 +228,7 @@ void IOS_LaunchDialog( void )
 	}
 	szArgc = count + 1;
 	szArgv[count + 1] = 0;
-	szArgv[0] = IOS_GetExecDir();
+	szArgv[0] = exec_dir;
 
 	alert.delegate = nil;
 
