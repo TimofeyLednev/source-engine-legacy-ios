@@ -32,24 +32,64 @@ class iOS:
 	ctx = None
 	sdkpath = None
 	target = None
-	
+	toolchain_bin = None
+
 	def __init__(self, ctx, issim):
 		self.ctx = ctx
 		sdk = 'iphonesimulator' if issim else 'iphoneos'
-		self.sdkpath = ctx.cmd_and_log('xcrun --show-sdk-path --sdk %s' % sdk).strip()
-		self.target = '--target=aarch64-apple-ios'
-		if issim: self.target += '-simulator'
-	
+
+		# Cross-compile from Linux (NBCraft-style): ios/build.sh exports
+		# NBC_* env vars pointing at an unpacked iOS SDK and a cctools-port
+		# toolchain. No xcrun / macOS required.
+		env_sdk = os.environ.get('NBC_SDK')
+		env_target = os.environ.get('NBC_TARGET')  # e.g. armv7-apple-ios6.0
+		self.toolchain_bin = os.environ.get('NBC_TOOLCHAIN_BIN')
+
+		if env_sdk:
+			self.sdkpath = env_sdk
+		else:
+			self.sdkpath = ctx.cmd_and_log('xcrun --show-sdk-path --sdk %s' % sdk).strip()
+
+		if env_target:
+			self.target = '--target=' + env_target
+		else:
+			self.target = '--target=aarch64-apple-ios'
+			if issim: self.target += '-simulator'
+
+	def _min_ver_flag(self):
+		# Deployment target is baked into NBC_TARGET (…-ios6.0) when
+		# cross-compiling, so we skip a separate -mios-version-min there.
+		if os.environ.get('NBC_TARGET'):
+			return []
+		return [ '-mios-version-min=12.0' ]
+
 	def cflags(self, cxx = False):
-	
-		cflags = [ '-isysroot' + self.sdkpath, self.target, '-mios-version-min=12.0' ]
+		cflags = [ '-isysroot' + self.sdkpath, self.target ]
+		cflags += self._min_ver_flag()
+		# Force libc++: the iOS 8.0 SDK ships libc++ + its headers, while
+		# its libstdc++ is too old for C++11. The engine is C++11.
+		cflags += [ '-stdlib=libc++' ]
+		# Point clang at the libc++ shim shipped next to the wrappers
+		# (fixes __config_site availability macros on the old SDK).
+		shim = os.environ.get('NBC_LIBCXX_SHIM')
+		if shim:
+			cflags += [ '-I' + shim ]
+		# Force-include the legacy POSIX compat shim.
+		compat = os.environ.get('NBC_LEGACY_COMPAT')
+		if compat:
+			cflags += [ '-include', compat ]
 		return cflags
-		
+
 	def linkflags(self):
-		
-		linkflags = [ '-isysroot' + self.sdkpath, self.target, '-mios-version-min=12.0', '-liconv', '-framework', 'CoreFoundation', '-L'+os.path.abspath('.')+'/lib/darwin/aarch64/' ]
+		linkflags = [ '-isysroot' + self.sdkpath, self.target ]
+		linkflags += self._min_ver_flag()
+		linkflags += [ '-stdlib=libc++' ]
+		# When cross-linking with cctools-port ld64, use it explicitly.
+		if self.toolchain_bin:
+			linkflags += [ '-fuse-ld=' + os.path.join(self.toolchain_bin, 'ld') ]
+		linkflags += [ '-framework', 'CoreFoundation' ]
 		return linkflags
-	
+
 	def cc(self):
 		return 'clang'
 

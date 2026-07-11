@@ -1,0 +1,3 @@
+# The cross toolchain (SDK, cctools-port, libdispatch, ldid) is built locally
+# by setup_toolchain.sh and must not be committed — it is large and per-host.
+build/

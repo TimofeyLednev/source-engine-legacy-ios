@@ -1,0 +1,19 @@
+// __config_site -- minimal libc++ site config for the legacy-iOS cross build.
+//
+// The iOS 8.0 SDK ships a libc++ whose <__config_site> predates several
+// availability macros that newer clang (14+) expects to exist. When those
+// macros are missing, clang bakes in __attribute__((availability(...)))
+// annotations that mark parts of the C++ standard library as "introduced
+// in a later iOS" than our deployment target, which then fails to compile.
+//
+// Placing this file first on the include path (via NBC_LIBCXX_SHIM) defines
+// the macros to their "feature present, no availability gating" values so
+// the standard library is usable when targeting iOS 5/6.
+#ifndef _LIBCPP_CONFIG_SITE
+#define _LIBCPP_CONFIG_SITE
+
+// Do not emit availability attributes: we ship our own libc++ behavior and
+// target an old deployment version deliberately.
+#define _LIBCPP_DISABLE_AVAILABILITY 1
+
+#endif // _LIBCPP_CONFIG_SITE
