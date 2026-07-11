@@ -66,6 +66,15 @@ echo "  jobs       : $JOBS"
 
 cd "$ROOT"
 
+# --- submodules ---------------------------------------------------------------
+# The engine pulls physics (ivp) and third-party sources from git submodules.
+# waf's subproject loader errors out ("Cannot read the folder ivp/havana") if
+# they are not checked out, so make sure they are present before configuring.
+if [ ! -f "$ROOT/ivp/ivp_physics/wscript" ] || [ ! -d "$ROOT/thirdparty" ]; then
+  echo "=== initializing git submodules (ivp, thirdparty) ==="
+  git -C "$ROOT" submodule update --init --depth 1 ivp thirdparty
+fi
+
 # --- configure ----------------------------------------------------------------
 # --togles  : OpenGL ES 2 render path (DX->GL abstraction for GLES)
 # --disable-warns : the leaked engine is warning-noisy; keep output readable
