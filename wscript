@@ -547,7 +547,10 @@ def configure(conf):
 		flags += ['-fsanitize=%s'%conf.options.SANITIZE, '-fno-sanitize=vptr']
 
 	if conf.env.DEST_OS != 'win32':
-		flags += ['-pipe', '-fPIC', '-L'+os.path.abspath('.')+'/lib/'+conf.env.DEST_OS+'/'+conf.env.DEST_CPU+'/']
+		if conf.env.IOS:
+			flags += ['-pipe', '-fPIC']
+		else:
+			flags += ['-pipe', '-fPIC', '-L'+os.path.abspath('.')+'/lib/'+conf.env.DEST_OS+'/'+conf.env.DEST_CPU+'/']
 	if conf.env.COMPILER_CC != 'msvc':
 		flags += ['-pthread']
 
@@ -566,10 +569,12 @@ def configure(conf):
 		]
 
 		flags += ['-funwind-tables', '-g']
-	elif conf.env.COMPILER_CC != 'msvc' and conf.env.DEST_OS != 'darwin' and conf.env.DEST_CPU in ['x86', 'x86_64']:
+	elif conf.env.COMPILER_CC != 'msvc' and conf.env.DEST_OS != 'darwin' and not conf.env.IOS and conf.env.DEST_CPU in ['x86', 'x86_64']:
 		flags += ['-march=core2']
 
-	if conf.env.DEST_CPU in ['x86', 'x86_64']:
+	if conf.env.IOS:
+		flags += ['-fsigned-char']
+	elif conf.env.DEST_CPU in ['x86', 'x86_64']:
 		flags += ['-mfpmath=sse']
 	elif conf.env.DEST_CPU in ['arm', 'aarch64']:
 		flags += ['-fsigned-char']

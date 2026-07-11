@@ -459,6 +459,12 @@ def post_compiler_cxx_configure(conf):
 	conf.msg('Target CPU', conf.env.DEST_CPU)
 	conf.msg('Target binfmt', conf.env.DEST_BINFMT)
 
+	if conf.options.IOS or conf.options.IOSSIM:
+		# cctools-port ld64 does not understand GNU ld's -Bstatic/-Bdynamic
+		# markers that waf inserts around libraries. Clear them for iOS.
+		conf.env.STLIB_MARKER = []
+		conf.env.SHLIB_MARKER = []
+
 	if conf.options.ANDROID_OPTS:
 		if conf.android.ndk_rev == 19:
 			conf.env.CXXFLAGS_cxxshlib += ['-static-libstdc++']
@@ -469,6 +475,12 @@ def post_compiler_c_configure(conf):
 	conf.msg('Target OS', conf.env.DEST_OS)
 	conf.msg('Target CPU', conf.env.DEST_CPU)
 	conf.msg('Target binfmt', conf.env.DEST_BINFMT)
+
+	if conf.options.IOS or conf.options.IOSSIM:
+		# cctools-port ld64 does not understand GNU ld's -Bstatic/-Bdynamic
+		# markers that waf inserts around libraries. Clear them for iOS.
+		conf.env.STLIB_MARKER = []
+		conf.env.SHLIB_MARKER = []
 
 	return
 
