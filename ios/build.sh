@@ -46,6 +46,7 @@ export NBC_TARGET="armv7-apple-ios6.0"
 export NBC_TOOLCHAIN_BIN="$TC/toolchain/bin"
 export NBC_LIBCXX_SHIM="$HERE/libcxx"
 export NBC_LEGACY_COMPAT="$HERE/compat/ios_legacy_compat.h"
+export NBC_SDL2_INCLUDE="$TC/sdl2/include/SDL2"
 export PATH="$NBC_TOOLCHAIN_BIN:$PATH"
 export CC=clang
 export CXX=clang++

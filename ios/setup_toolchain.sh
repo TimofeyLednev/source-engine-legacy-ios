@@ -100,6 +100,25 @@ if [ ! -x toolchain/bin/arm-apple-darwin11-ld ] && [ ! -x toolchain/bin/ld64 ]; 
 fi
 echo "cctools:"; ls toolchain/bin/ | grep -iE "arm-apple|ld$|lipo|strip|ranlib|ar$" | head
 
+echo "=========== STAGE 3c: SDL2 2.0.7 headers ==========="
+# The engine's video/input layer #includes SDL headers on every platform.
+# SDL 2.0.7 is the LAST SDL2 release that still supports iOS 6.1 (2.0.8
+# bumped the minimum to iOS 8.0), so we pin exactly 2.0.7. We only need
+# the headers for cross-compilation; the actual libSDL2.a is produced
+# later (or provided by the on-device runtime).
+SDLINC="$TC/sdl2/include/SDL2"
+if [ ! -e "$SDLINC/SDL.h" ]; then
+  rm -rf "$TC/sdl2" "$TC/SDL2-2.0.7"
+  ( cd "$TC"
+    wget -q https://www.libsdl.org/release/SDL2-2.0.7.tar.gz -O sdl207.tar.gz \
+      || wget -q https://github.com/libsdl-org/SDL/releases/download/release-2.0.7/SDL2-2.0.7.tar.gz -O sdl207.tar.gz
+    tar xzf sdl207.tar.gz
+    mkdir -p "$SDLINC"
+    cp SDL2-2.0.7/include/*.h "$SDLINC/"
+    rm -f sdl207.tar.gz )
+fi
+echo "SDL2 headers: $(ls $SDLINC/SDL.h 2>/dev/null || echo MISSING) (2.0.7, last with iOS 6.1)"
+
 echo "=========== STAGE 4: ldid ==========="
 if [ ! -x toolchain/bin/ldid ]; then
   rm -rf ldid

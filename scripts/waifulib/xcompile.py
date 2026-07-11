@@ -448,6 +448,15 @@ def configure(conf):
 		conf.env.LINKFLAGS += ios.linkflags()
 		conf.env.IOS = 1
 
+		# SDL2 2.0.7 headers (last SDL2 with iOS 6.1 support) live in the
+		# cross toolchain; the engine's video/input layer includes them on
+		# every platform. Expose the path so subprojects that reference
+		# INCLUDES_SDL2 (e.g. togles) resolve, and add it globally too.
+		sdl2_inc = os.environ.get('NBC_SDL2_INCLUDE')
+		if sdl2_inc and os.path.isdir(sdl2_inc):
+			conf.env.INCLUDES_SDL2 = [sdl2_inc]
+			conf.env.append_unique('INCLUDES', [sdl2_inc])
+
 
 	MACRO_TO_DESTOS = OrderedDict({ '__ANDROID__' : 'android' })
 	for k in c_config.MACRO_TO_DESTOS:
