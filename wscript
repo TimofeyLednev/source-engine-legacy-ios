@@ -221,7 +221,22 @@ def define_platform(conf):
 	if arch64:
 		conf.define('PLATFORM_64BITS', 1)
 
-	if conf.env.DEST_OS == 'linux':
+	if conf.env.IOS:
+		# Legacy-iOS cross build: DEST_OS is reported as 'linux' by waf
+		# (the host), so the DEST_OS switch below never reaches a darwin
+		# branch. Apply the Apple + iOS platform defines here explicitly.
+		conf.env.append_unique('DEFINES', [
+			'APPLE=1', '_APPLE=1',
+			'POSIX=1', '_POSIX=1', 'PLATFORM_POSIX=1',
+			'GNUC',
+			'NO_HOOK_MALLOC',
+			'_DLL_EXT=.dylib',
+			'IOS=1', '_IOS=1'
+		])
+		conf.env.append_unique('INCLUDES', [
+			os.path.abspath('thirdparty/angle/include'),
+		])
+	elif conf.env.DEST_OS == 'linux':
 		conf.define('_GLIBCXX_USE_CXX11_ABI',0)
 		conf.env.append_unique('DEFINES', [
 			'LINUX=1', '_LINUX=1',
@@ -499,7 +514,7 @@ def configure(conf):
 	conf.load('subproject xcompile compiler_c compiler_cxx gccdeps gitversion clang_compilation_database strip_on_install_v2 waf_unit_test enforce_pic')
 	if conf.env.DEST_OS == 'win32' and conf.env.DEST_CPU == 'amd64':
 		conf.load('masm')
-	elif conf.env.DEST_OS == 'darwin':
+	elif conf.env.DEST_OS == 'darwin' or conf.env.IOS:
 		conf.load('mm_hook')
 
 	conf.env.BIT32_MANDATORY = conf.options.TARGET32
