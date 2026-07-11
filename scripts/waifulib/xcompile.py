@@ -455,6 +455,14 @@ def configure(conf):
 		conf.env.LINKFLAGS += ios.linkflags()
 		conf.env.IOS = 1
 
+		# ios/compat holds shim headers (e.g. <malloc.h>) that redirect
+		# glibc-isms used by third-party submodules to their Apple
+		# equivalents. Place it early on the global include path so those
+		# legacy includes resolve without patching submodule sources.
+		compat_inc = os.environ.get('NBC_COMPAT_INCLUDE')
+		if compat_inc and os.path.isdir(compat_inc):
+			conf.env.append_unique('INCLUDES', [compat_inc])
+
 		# SDL2 2.0.7 headers (last SDL2 with iOS 6.1 support) live in the
 		# cross toolchain; the engine's video/input layer includes them on
 		# every platform. Expose the path so subprojects that reference
