@@ -27,6 +27,21 @@
 #include <sys/types.h>
 
 // ---------------------------------------------------------------------------
+// MSG_NOSIGNAL.
+//
+// Linux uses the send() flag MSG_NOSIGNAL to suppress SIGPIPE on a broken
+// socket. Apple platforms have no such flag (they use the SO_NOSIGPIPE
+// socket option instead), so <sys/socket.h> never defines it. The engine's
+// rcon/socketcreator code only guards its own `#define MSG_NOSIGNAL 0` with
+// `#ifdef OSX`, which is not set for iOS. Define it here (0 == no flag) for
+// every legacy-iOS translation unit so those sends compile and behave like
+// the desktop macOS build.
+// ---------------------------------------------------------------------------
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
+// ---------------------------------------------------------------------------
 // clock_gettime() shim.
 //
 // clock_gettime() and the CLOCK_* constants only appeared in the iOS 10 SDK.
