@@ -93,4 +93,13 @@ if [ ! -x toolchain/bin/ldid ]; then
 fi
 echo "ldid: $(ls toolchain/bin/ldid 2>/dev/null || echo MISSING)"
 
+echo "=========== STAGE 5: generic tool symlinks ==========="
+# clang picks the linker via -fuse-ld=<bin>/ld, and various tools expect
+# unprefixed names. Symlink the arm-apple-darwin11-* tools to plain names.
+( cd toolchain/bin
+  for t in ld lipo strip ranlib ar as nm otool install_name_tool libtool; do
+    [ -e "$t" ] || ln -sfn "arm-apple-darwin11-$t" "$t"
+  done )
+echo "symlinks: $(ls toolchain/bin/ld toolchain/bin/lipo toolchain/bin/strip 2>/dev/null | tr '\n' ' ')"
+
 echo "=========== TOOLCHAIN DONE ==========="
