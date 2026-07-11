@@ -473,6 +473,7 @@ def post_compiler_cxx_configure(conf):
 		# markers that waf inserts around libraries. Clear them for iOS.
 		conf.env.STLIB_MARKER = []
 		conf.env.SHLIB_MARKER = []
+		_ios_macho_shlib(conf)
 
 	if conf.options.ANDROID_OPTS:
 		if conf.android.ndk_rev == 19:
@@ -490,8 +491,24 @@ def post_compiler_c_configure(conf):
 		# markers that waf inserts around libraries. Clear them for iOS.
 		conf.env.STLIB_MARKER = []
 		conf.env.SHLIB_MARKER = []
+		_ios_macho_shlib(conf)
 
 	return
+
+def _ios_macho_shlib(conf):
+	# On iOS the output must be a Mach-O dynamic library, not an ELF .so.
+	# clang only links libSystem (libc) when it emits a -dynamiclib; a plain
+	# GNU -shared leaves memset/memcpy/etc. undefined for armv7. Also swap the
+	# GNU -Wl,-soname convention for Mach-O's -install_name.
+	conf.env.cxxshlib_PATTERN = 'lib%s.dylib'
+	conf.env.cshlib_PATTERN = 'lib%s.dylib'
+	conf.env.macbundle_PATTERN = 'lib%s.dylib'
+	conf.env.LINKFLAGS_cxxshlib = ['-dynamiclib', '-undefined', 'dynamic_lookup']
+	conf.env.LINKFLAGS_cshlib = ['-dynamiclib', '-undefined', 'dynamic_lookup']
+	# Mach-O install_name (used by the dynamic loader at runtime).
+	conf.env.SONAME_ST = '-Wl,-install_name,@rpath/%s'
+	# Drop any GNU-only shared-link flags waf may have primed.
+	conf.env.LINKFLAGS_MACBUNDLE = ['-dynamiclib', '-undefined', 'dynamic_lookup']
 
 from waflib.Tools import compiler_cxx, compiler_c
 
