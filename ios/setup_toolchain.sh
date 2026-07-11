@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
-# Toolchain lives next to this script under build/work by default
+# ios/setup_toolchain.sh -- build the Linux->iOS cross toolchain.
+# Downloads iOS SDK (9.3, still armv7-capable), builds libtapi,
+# apple-libdispatch, cctools-port (ld64/lipo/strip) and ldid.
 HERE="$(cd "$(dirname "$0")" && pwd)"
 export TC="${NBC_TOOLCHAIN:-$HERE/build/work}"
 mkdir -p "$TC"
@@ -30,24 +32,47 @@ echo "=========== STAGE 3: cctools-port (ld64/lipo/strip) ==========="
 # ld64 needs Apple's libdispatch + BlocksRuntime on Linux. Build the
 # tpoechtrager port of libdispatch and point cctools at it.
 DISPATCH="$TC/apple-libdispatch"
-if [ ! -f "$DISPATCH/build/libdispatch.a" ]; then
+if [ ! -f "$TC/toolchain/lib/libdispatch.so" ]; then
   rm -rf "$DISPATCH"
   git clone --depth 1 https://github.com/tpoechtrager/apple-libdispatch.git "$DISPATCH" > /tmp/dispatch_clone.log 2>&1
   mkdir -p "$DISPATCH/build"
   cd "$DISPATCH/build"
-  cmake -DCMAKE_INSTALL_PREFIX="$TC/toolchain" -DCMAKE_BUILD_TYPE=Release .. > /tmp/dispatch_cmake.log 2>&1 \
+  CC=clang CXX=clang++ cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_INSTALL_PREFIX="$TC/toolchain" -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_TESTING=OFF .. > /tmp/dispatch_cmake.log 2>&1 \
     || { echo "libdispatch cmake FAILED"; tail -30 /tmp/dispatch_cmake.log; exit 1; }
-  make -j$(nproc) > /tmp/dispatch_make.log 2>&1 || { echo "libdispatch make FAILED"; tail -40 /tmp/dispatch_make.log; exit 1; }
-  make install > /tmp/dispatch_install.log 2>&1 || true
+  make -j$(nproc) dispatch BlocksRuntime > /tmp/dispatch_make.log 2>&1 \
+    || { echo "libdispatch make FAILED"; tail -40 /tmp/dispatch_make.log; exit 1; }
+  # Install libs + headers into the toolchain prefix by hand (the port's
+  # `make install` pulls in test targets we skipped).
+  mkdir -p "$TC/toolchain/lib" "$TC/toolchain/include/dispatch" "$TC/toolchain/include/os"
+  cp -f libdispatch.so libBlocksRuntime.so "$TC/toolchain/lib/" 2>/dev/null || true
+  cp -f "$DISPATCH"/dispatch/*.h "$TC/toolchain/include/dispatch/" 2>/dev/null || true
+  cp -f "$DISPATCH"/os/*.h "$TC/toolchain/include/os/" 2>/dev/null || true
+  cp -f "$DISPATCH"/BlocksRuntime/Block.h "$TC/toolchain/include/" 2>/dev/null || true
   cd "$TC"
 fi
-echo "libdispatch: $(ls $DISPATCH/build/libdispatch.a 2>/dev/null || echo MISSING)"
+echo "libdispatch: $(ls $TC/toolchain/lib/libdispatch.so 2>/dev/null || echo MISSING)"
+
+# ld64 must read .tbd text stubs from the iOS SDK -> needs libtapi.
+if [ ! -f "$TC/toolchain/lib/libtapi.so" ] && [ ! -f "$TC/toolchain/lib/libtapi.dylib" ]; then
+  echo "=========== STAGE 3b: libtapi ==========="
+  rm -rf apple-libtapi
+  git clone --depth 1 https://github.com/tpoechtrager/apple-libtapi.git > /tmp/tapi_clone.log 2>&1
+  cd apple-libtapi
+  INSTALLPREFIX="$TC/toolchain" ./build.sh > /tmp/tapi_build.log 2>&1 \
+    || { echo "libtapi build FAILED"; tail -40 /tmp/tapi_build.log; exit 1; }
+  ./install.sh > /tmp/tapi_install.log 2>&1 || { echo "libtapi install FAILED"; tail -20 /tmp/tapi_install.log; exit 1; }
+  cd "$TC"
+fi
+echo "libtapi: $(ls $TC/toolchain/lib/libtapi.* 2>/dev/null | head -1 || echo MISSING)"
 
 if [ ! -x toolchain/bin/arm-apple-darwin11-ld ] && [ ! -x toolchain/bin/ld64 ]; then
   rm -rf cctools-port
   git clone --depth 1 https://github.com/tpoechtrager/cctools-port.git > /tmp/cctools_clone.log 2>&1
   cd cctools-port/cctools
   ./configure --prefix="$TC/toolchain" --target=arm-apple-darwin11 \
+    --with-libtapi="$TC/toolchain" \
     --with-libdispatch="$TC/toolchain" --with-libblocksruntime="$TC/toolchain" > /tmp/cctools_conf.log 2>&1 \
     || { echo "configure FAILED"; tail -30 /tmp/cctools_conf.log; exit 1; }
   make -j$(nproc) > /tmp/cctools_make.log 2>&1 || { echo "make FAILED"; tail -40 /tmp/cctools_make.log; exit 1; }
