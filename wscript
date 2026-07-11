@@ -357,7 +357,12 @@ def options(opt):
 	opt.load('reconfigure')
 
 def check_deps(conf):
-	if conf.env.DEST_OS != 'win32':
+	if conf.env.IOS:
+		# iOS: base system libs (libc/libm/etc.) come from the SDK; the
+		# framework/lib checks happen in the IOS branch below. Skip both
+		# the POSIX host-lib probes and the Win32 lib list.
+		pass
+	elif conf.env.DEST_OS != 'win32':
 		conf.check_cc(lib='dl', mandatory=False)
 		conf.check_cc(lib='bz2', mandatory=True)
 		conf.check_cc(lib='rt', mandatory=False)
@@ -439,15 +444,15 @@ def check_deps(conf):
 			if conf.options.OPUS:
 				conf.check_cfg(package='opus', uselib_store='OPUS', args=['--cflags', '--libs'])
 	elif conf.env.IOS:
-		conf.check(lib='freetype2', uselib_store='FT2')
-		conf.check(lib='jpeg', uselib_store='JPEG', define_name='HAVE_JPEG')
-		conf.check(lib='png', uselib_store='PNG', define_name='HAVE_PNG')
-		conf.check(lib='curl', uselib_store='CURL', define_name='HAVE_CURL')
-		conf.check(lib='z', uselib_store='ZLIB', define_name='HAVE_ZLIB')
+		conf.check(lib='freetype2', uselib_store='FT2', mandatory=False)
+		conf.check(lib='jpeg', uselib_store='JPEG', define_name='HAVE_JPEG', mandatory=False)
+		conf.check(lib='png', uselib_store='PNG', define_name='HAVE_PNG', mandatory=False)
+		conf.check(lib='curl', uselib_store='CURL', define_name='HAVE_CURL', mandatory=False)
+		conf.check(lib='z', uselib_store='ZLIB', define_name='HAVE_ZLIB', mandatory=False)
 		if not conf.env.TOGLES:
-			conf.check(lib='gl4es', uselib_store='GL')
+			conf.check(lib='gl4es', uselib_store='GL', mandatory=False)
 		conf.env.FRAMEWORK_OPENAL = "OpenAL"
-		conf.check(framework='CoreFoundation', uselib_store='COREFOUNDATION', msg='Checking for CoreFoundation')
+		conf.check(framework='CoreFoundation', uselib_store='COREFOUNDATION', msg='Checking for CoreFoundation', mandatory=False)
 	else:
 		conf.check(lib='SDL2', uselib_store='SDL2')
 		conf.check(lib='freetype2', uselib_store='FT2')
@@ -658,11 +663,12 @@ def configure(conf):
 
 	check_deps( conf )
 
-	conf.load('sdl2')
-	if not conf.env.HAVE_SDL2:
-		conf.fatal("SDL2 isn't available")
-	else:
-		conf.env.append_unique('INCLUDES', conf.env.INCLUDES_SDL2)
+	if not conf.env.IOS:
+		conf.load('sdl2')
+		if not conf.env.HAVE_SDL2:
+			conf.fatal("SDL2 isn't available")
+		else:
+			conf.env.append_unique('INCLUDES', conf.env.INCLUDES_SDL2)
 
 	# indicate if we are packaging for Linux/BSD
 	if conf.env.DEST_OS != 'android' and not conf.env.IOS:
