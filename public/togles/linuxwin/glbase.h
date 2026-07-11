@@ -38,11 +38,12 @@
 #endif
 
 #if defined( IOS ) || defined( _IOS )
-// Legacy iOS: SDL_opengl.h explicitly disables GL on iOS, and there is no
-// desktop <GL/gl.h>. Pull the real OpenGL ES 2.0 headers from the SDK's
-// OpenGLES.framework so GLint / GLenum / gl* entry points are declared.
-#include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
+// Legacy iOS: SDL_opengl.h explicitly disables GL on iOS. The togles DX->GL
+// abstraction is compiled against the bundled self-contained desktop GL
+// declarations (common/GL/gl.h + glext.h); at runtime the entry points are
+// bound dynamically to the device's OpenGL ES 2.0 driver.
+#include <GL/gl.h>
+#include <GL/glext.h>
 #elif defined( USE_SDL )
 #include "SDL_opengl.h"
 #endif

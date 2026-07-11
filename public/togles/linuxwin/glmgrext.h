@@ -29,10 +29,7 @@
 
 #pragma once
 
-#if defined( IOS ) || defined( _IOS )
-#include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
-#elif defined(OSX)
+#if defined(OSX)
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 #elif defined(DX_TO_GL_ABSTRACTION)

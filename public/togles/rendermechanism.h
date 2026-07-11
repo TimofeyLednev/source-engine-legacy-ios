@@ -29,13 +29,8 @@
 
 #undef PROTECTED_THINGS_ENABLE
 
-#if defined( IOS ) || defined( _IOS )
-#include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
-#else
 #include <GL/gl.h>
 #include <GL/glext.h>
-#endif
 
 #include "tier0/basetypes.h"
 #include "tier0/platform.h"
