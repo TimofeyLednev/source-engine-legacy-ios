@@ -24,6 +24,25 @@ fi
 echo "[SDK] path: $(ls -d $sdk 2>/dev/null || echo MISSING)"
 ls "$sdk/System/Library/Frameworks" 2>/dev/null | grep -iE "OpenGLES|UIKit|Foundation" || echo "[SDK] WARN frameworks not found"
 
+# The theos iOS 9.3 SDK omits a few .tbd stubs that libSystem re-exports.
+# ld64 walks the re-export chain and errors if they are missing, so we
+# synthesize minimal (symbol-less) stubs for them.
+for l in liblaunch libsystem_secinit libsystem_symptoms; do
+  stub="$sdk/usr/lib/system/$l.tbd"
+  if [ ! -e "$stub" ] && [ ! -e "$sdk/usr/lib/system/$l.dylib" ]; then
+    cat > "$stub" <<EOF
+---
+archs:                 [ armv7, armv7s, arm64, i386, x86_64 ]
+platform:              ios
+install-name:          /usr/lib/system/$l.dylib
+current-version:       1
+compatibility-version: 1
+...
+EOF
+  fi
+done
+echo "[SDK] re-export stubs ok"
+
 echo "=========== STAGE 2: libBlocksRuntime ==========="
 dpkg -l | grep -q libblocksruntime-dev || apt-get install -y libblocksruntime-dev 2>&1 | tail -1 || true
 echo "blocks: $(dpkg -l | grep -i blocksruntime-dev | awk '{print $3}' | head -1)"
