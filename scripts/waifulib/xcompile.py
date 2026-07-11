@@ -467,10 +467,17 @@ def configure(conf):
 		# cross toolchain; the engine's video/input layer includes them on
 		# every platform. Expose the path so subprojects that reference
 		# INCLUDES_SDL2 (e.g. togles) resolve, and add it globally too.
+		# We expose BOTH the ".../include/SDL2" dir (so bare `#include <SDL.h>`
+		# works) and its parent ".../include" (so `#include "SDL2/SDL.h"`,
+		# used by launcher_main/main.cpp, also resolves).
 		sdl2_inc = os.environ.get('NBC_SDL2_INCLUDE')
 		if sdl2_inc and os.path.isdir(sdl2_inc):
-			conf.env.INCLUDES_SDL2 = [sdl2_inc]
-			conf.env.append_unique('INCLUDES', [sdl2_inc])
+			sdl2_paths = [sdl2_inc]
+			sdl2_parent = os.path.dirname(sdl2_inc.rstrip('/'))
+			if sdl2_parent and os.path.isdir(sdl2_parent):
+				sdl2_paths.append(sdl2_parent)
+			conf.env.INCLUDES_SDL2 = sdl2_paths
+			conf.env.append_unique('INCLUDES', sdl2_paths)
 
 
 	MACRO_TO_DESTOS = OrderedDict({ '__ANDROID__' : 'android' })
