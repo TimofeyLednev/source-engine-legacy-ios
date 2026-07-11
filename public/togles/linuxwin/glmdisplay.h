@@ -32,7 +32,7 @@
 
 #pragma once
 
-#ifdef USE_SDL
+#if defined( USE_SDL ) && !defined( IOS ) && !defined( _IOS )
 #include "SDL_opengl.h"
 #endif
 

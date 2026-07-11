@@ -17,8 +17,14 @@
 
 #if defined( DX_TO_GL_ABSTRACTION )
 
+#if defined( TOGLES )
+#include "togles/linuxwin/glbase.h"
+#include "togles/linuxwin/glmgrbasics.h"
+#include "togles/linuxwin/glmdisplay.h"
+#else
 #include "togl/linuxwin/glmgrbasics.h"
 #include "togl/linuxwin/glmdisplay.h"
+#endif
 
 class GLMDisplayDB;
 class CShowPixelsParams;

@@ -37,7 +37,13 @@
 #define HAVE_GL_ARB_SYNC 1
 #endif
 
-#ifdef USE_SDL
+#if defined( IOS ) || defined( _IOS )
+// Legacy iOS: SDL_opengl.h explicitly disables GL on iOS, and there is no
+// desktop <GL/gl.h>. Pull the real OpenGL ES 2.0 headers from the SDK's
+// OpenGLES.framework so GLint / GLenum / gl* entry points are declared.
+#include <OpenGLES/ES2/gl.h>
+#include <OpenGLES/ES2/glext.h>
+#elif defined( USE_SDL )
 #include "SDL_opengl.h"
 #endif
 
