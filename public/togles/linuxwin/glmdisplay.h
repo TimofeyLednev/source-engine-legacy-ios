@@ -32,7 +32,10 @@
 
 #pragma once
 
-#ifdef USE_SDL
+#if defined( IOS ) || defined( _IOS )
+#include <GL/gl.h>
+#include <GL/glext.h>
+#elif defined( USE_SDL )
 #include "SDL_opengl.h"
 #endif
 
@@ -45,6 +48,12 @@
 #endif
 
 #ifdef MAC_OS_X_VERSION_10_9
+typedef uint32_t CGDirectDisplayID;
+typedef uint32_t CGOpenGLDisplayMask;
+typedef double CGRefreshRate;
+#endif
+
+#if defined( MAC_OS_X_VERSION_10_9 ) || defined( IOS ) || defined( _IOS )
 typedef uint32_t CGDirectDisplayID;
 typedef uint32_t CGOpenGLDisplayMask;
 typedef double CGRefreshRate;
