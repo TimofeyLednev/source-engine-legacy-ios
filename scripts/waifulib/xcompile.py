@@ -78,6 +78,13 @@ class iOS:
 		compat = os.environ.get('NBC_LEGACY_COMPAT')
 		if compat:
 			cflags += [ '-include', compat ]
+		# Every armv7 iOS device (A5 and newer: iPhone 4S, iPad 2, ...)
+		# has an Advanced SIMD (NEON) unit. common/sse2neon.h *requires*
+		# NEON on ARMv7 (it #errors otherwise) and the engine's SSE math
+		# maps onto it, so enable NEON + VFPv3 for the armv7 target.
+		tgt = os.environ.get('NBC_TARGET', '')
+		if tgt.startswith('armv7'):
+			cflags += [ '-mfpu=neon' ]
 		return cflags
 
 	def linkflags(self):
