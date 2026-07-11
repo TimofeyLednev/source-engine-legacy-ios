@@ -25,12 +25,14 @@
 #endif
 #if IOS
 #include <dlfcn.h>
+#if ANGLE
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 #include "EGL/eglext_angle.h"
-#include "SDL2/SDL_rect.h"
-#include "SDL2/sdl_video.h"
-#include "SDL2/SDL_syswm.h"
+#endif
+#include "SDL_rect.h"
+#include "SDL_video.h"
+#include "SDL_syswm.h"
 #endif
 
 // NOTE: This has to be the last file included! (turned off below, since this is included like a header)
@@ -74,7 +76,7 @@ COpenGLEntryPoints *gGL = NULL;
 
 const int kBogusSwapInterval = INT_MAX;
 
-#if defined ANDROID || defined TOGLES
+#if defined ANDROID || ( defined TOGLES && ( !defined IOS || defined ANGLE ) )
 static void *l_gl4es = NULL;
 static void *l_egl = NULL;
 static void *l_gles = NULL;
@@ -643,6 +645,14 @@ InitReturnVal_t CSDLMgr::Init()
 
 
 #ifdef TOGLES
+	#if defined( IOS ) && !defined( ANGLE )
+	// Legacy iOS: SDL 2.0.7 creates the GLES context itself through its
+	// UIKit/EAGL backend. There is no EGL to dlopen, and the A5-class GPUs
+	// (PowerVR SGX543) only speak OpenGL ES 2.0.
+	SET_GL_ATTR(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+	SET_GL_ATTR(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SET_GL_ATTR(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	#else
 	#ifndef ANGLE
 	l_egl = dlopen("libEGL.so", RTLD_LAZY);
 	l_gles = dlopen("libGLESv3.so", RTLD_LAZY);
@@ -671,6 +681,7 @@ InitReturnVal_t CSDLMgr::Init()
 			&& strstr(_eglQueryString(display, EGL_EXTENSIONS) ,"EGL_KHR_gl_colorspace") )
 				SET_GL_ATTR(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)
 	}
+	#endif
 #elif ANDROID
 	bool m_bOGL = false;
 
@@ -2309,7 +2320,7 @@ void CSDLMgr::DisplayedSize( uint &width, uint &height )
 	SDLAPP_FUNC;
 
 	int w, h;
-	SDL_GetWindowSizeInPixels(m_Window, &w, &h);
+	SDL_GL_GetDrawableSize(m_Window, &w, &h);
 	width = (uint) w;
 	height = (uint) h;
 }
