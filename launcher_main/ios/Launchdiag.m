@@ -96,7 +96,9 @@ void IOS_PrepareView(void)
 	[[controller view] setBackgroundColor:[UIColor grayColor]];
 	[window setRootViewController:controller];
 	[window makeKeyAndVisible];
-	if([[controller traitCollection] userInterfaceStyle] == UIUserInterfaceStyleDark && g_iOSVer >= 13.0) isdark = true; else isdark = false;
+	// Legacy iOS (5/6, SDK 9.3) has no dark mode; userInterfaceStyle/UIUserInterfaceStyleDark
+	// are iOS 12/13 APIs absent from this SDK. Always light on our target devices.
+	isdark = false;
 #if 0
 	UIButton *button = [[UIButton alloc] initWithFrame:CGRectMake(10, 10, 100, 20)];
 	int button1 = -1;
