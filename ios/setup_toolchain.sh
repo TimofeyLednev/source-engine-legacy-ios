@@ -78,14 +78,14 @@ echo "=========== STAGE 3: cctools-port (ld64/lipo/strip) ==========="
 DISPATCH="$TC/apple-libdispatch"
 if [ ! -f "$TC/toolchain/lib/libdispatch.so" ]; then
   rm -rf "$DISPATCH"
-  git clone --depth 1 https://github.com/tpoechtrager/apple-libdispatch.git "$DISPATCH" > /tmp/dispatch_clone.log 2>&1
+  git clone --depth 1 https://github.com/tpoechtrager/apple-libdispatch.git "$DISPATCH" 2>&1 | tee /tmp/dispatch_clone.log
   mkdir -p "$DISPATCH/build"
   cd "$DISPATCH/build"
   CC=clang CXX=clang++ cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
     -DCMAKE_INSTALL_PREFIX="$TC/toolchain" -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_TESTING=OFF .. > /tmp/dispatch_cmake.log 2>&1 \
+    -DBUILD_TESTING=OFF .. 2>&1 | tee /tmp/dispatch_cmake.log \
     || { echo "libdispatch cmake FAILED"; tail -30 /tmp/dispatch_cmake.log; exit 1; }
-  make -j$(nproc) dispatch BlocksRuntime > /tmp/dispatch_make.log 2>&1 \
+  make -j$(nproc) dispatch BlocksRuntime 2>&1 | tee /tmp/dispatch_make.log \
     || { echo "libdispatch make FAILED"; tail -40 /tmp/dispatch_make.log; exit 1; }
   # Install libs + headers into the toolchain prefix by hand (the port's
   # `make install` pulls in test targets we skipped).
@@ -113,14 +113,14 @@ echo "libtapi: $(ls $TC/toolchain/lib/libtapi.* 2>/dev/null | head -1 || echo MI
 
 if [ ! -x toolchain/bin/arm-apple-darwin11-ld ] && [ ! -x toolchain/bin/ld64 ]; then
   rm -rf cctools-port
-  git clone --depth 1 https://github.com/tpoechtrager/cctools-port.git > /tmp/cctools_clone.log 2>&1
+  git clone --depth 1 https://github.com/tpoechtrager/cctools-port.git 2>&1 | tee /tmp/cctools_clone.log
   cd cctools-port/cctools
   ./configure --prefix="$TC/toolchain" --target=arm-apple-darwin11 \
     --with-libtapi="$TC/toolchain" \
-    --with-libdispatch="$TC/toolchain" --with-libblocksruntime="$TC/toolchain" > /tmp/cctools_conf.log 2>&1 \
+    --with-libdispatch="$TC/toolchain" --with-libblocksruntime="$TC/toolchain" 2>&1 | tee /tmp/cctools_conf.log \
     || { echo "configure FAILED"; tail -30 /tmp/cctools_conf.log; exit 1; }
-  make -j$(nproc) > /tmp/cctools_make.log 2>&1 || { echo "make FAILED"; tail -40 /tmp/cctools_make.log; exit 1; }
-  make install > /tmp/cctools_install.log 2>&1 || { echo "install FAILED"; tail -20 /tmp/cctools_install.log; exit 1; }
+  make -j$(nproc) 2>&1 | tee /tmp/cctools_make.log || { echo "make FAILED"; tail -40 /tmp/cctools_make.log; exit 1; }
+  make install 2>&1 | tee /tmp/cctools_install.log || { echo "install FAILED"; tail -20 /tmp/cctools_install.log; exit 1; }
   cd "$TC"
 fi
 echo "cctools:"; ls toolchain/bin/ | grep -iE "arm-apple|ld$|lipo|strip|ranlib|ar$" | head
