@@ -48,6 +48,7 @@ export NBC_LIBCXX_SHIM="$HERE/libcxx"
 export NBC_LEGACY_COMPAT="$HERE/compat/ios_legacy_compat.h"
 export NBC_COMPAT_INCLUDE="$HERE/compat"
 export NBC_SDL2_INCLUDE="$TC/sdl2/include/SDL2"
+export NBC_SDL2_LIB="$TC/sdl2/lib"
 export PATH="$NBC_TOOLCHAIN_BIN:$PATH"
 export CC=clang
 export CXX=clang++

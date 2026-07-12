@@ -430,7 +430,19 @@ def check_deps(conf):
 		else:
 			conf.env.FRAMEWORK_UIKIT = "UIKit"
 			conf.env.FRAMEWORK_CFNETWORK = "CFNetwork"
-			conf.env.FRAMEWORK_SDL2 = "SDL2"
+			# SDL2 2.0.7 (last release supporting iOS 6.1) is cross-built as a
+			# static libSDL2.a by ios/build_sdl2.sh — link it as a static lib,
+			# not a framework (there is no SDL2.framework on legacy iOS).
+			sdl2_libdir = os.environ.get('NBC_SDL2_LIB')
+			if not sdl2_libdir:
+				tcbin = os.environ.get('NBC_TOOLCHAIN_BIN', '')
+				if tcbin:
+					sdl2_libdir = os.path.abspath(os.path.join(tcbin, '..', '..', 'sdl2', 'lib'))
+			if sdl2_libdir and os.path.isfile(os.path.join(sdl2_libdir, 'libSDL2.a')):
+				conf.env.STLIB_SDL2 = ["SDL2"]
+				conf.env.STLIBPATH_SDL2 = [sdl2_libdir]
+			else:
+				conf.env.FRAMEWORK_SDL2 = "SDL2"
 			conf.env.FRAMEWORK_AVFOUNDATION = "AVFoundation"
 			# Objective-C runtime (objc_msgSend, autoreleasepool, ...) lives in
 			# libobjc on Apple platforms — it is a plain library, not a framework.
