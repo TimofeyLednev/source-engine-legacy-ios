@@ -39,8 +39,11 @@ echo "=== building libSDL2.a (2.0.7, armv7-ios6.0) ==="
 # few desktop backends (x11/wayland/cocoa/qnx/windows/linux-evdev/...) include
 # their platform headers unconditionally and won't cross-compile. Skip those
 # directories; keep the portable core + the uikit/coreaudio/iphoneos backends.
+# NOTE: only video/cocoa + filesystem/cocoa are AppKit desktop code — file/cocoa
+# (SDL_rwopsbundlesupport.m, provides SDL_OpenFPFromBundleOrFallback) is Foundation
+# only and IS needed on iOS, so we do NOT blanket-exclude "cocoa".
 # main/dummy defines its own _main which collides with the uikit delegate's.
-EXCLUDE_RE='/(x11|wayland|cocoa|qnx|windows|winrt|directfb|kmsdrm|mir|vivante|haiku|nacl|psp|emscripten|directsound|winmm|wasapi|xaudio2|alsa|pulseaudio|jack|arts|esd|nas|sndio|dsp|sun|paudio|netbsd|fusionsound|linux|test|main/dummy|dummy/SDL_nullevents|windowsvideo)/'
+EXCLUDE_RE='/(x11|wayland|video/cocoa|filesystem/cocoa|qnx|windows|winrt|directfb|kmsdrm|mir|vivante|haiku|nacl|psp|emscripten|directsound|winmm|wasapi|xaudio2|alsa|pulseaudio|jack|arts|esd|nas|sndio|dsp|sun|paudio|netbsd|fusionsound|linux|test|main/dummy|dummy/SDL_nullevents|windowsvideo)/'
 srcs=$(find "$SDLSRC/src" -name '*.c' -o -name '*.m' | grep -vE "$EXCLUDE_RE" | sort)
 total=$(echo "$srcs" | wc -l)
 n=0; failed=0
@@ -60,8 +63,18 @@ echo "compiled $((n-failed))/$total objects (failed=$failed)"
 [ "$failed" -eq 0 ] || { echo "SDL2 build had failures; see $TC/sdl2/build_err.log"; exit 1; }
 
 rm -f "$OUT/libSDL2.a"
-ar rcs "$OUT/libSDL2.a" "$OBJ"/*.o
-ranlib "$OUT/libSDL2.a" 2>/dev/null || true
+# Use cctools' libtool -static, NOT ar: ld64 rejects ar-built archives with a
+# bogus "building for iOS-armv7 but attempting to link with file built for iOS
+# Simulator" warning and silently ignores the whole .a. libtool -static writes
+# the platform info ld64 expects, so the archive links correctly.
+LIBTOOL="$TC/toolchain/bin/arm-apple-darwin11-libtool"
+if [ -x "$LIBTOOL" ]; then
+  "$LIBTOOL" -static -o "$OUT/libSDL2.a" "$OBJ"/*.o
+else
+  echo "WARN: cctools libtool not found, falling back to ar (may be ignored by ld64)"
+  ar rcs "$OUT/libSDL2.a" "$OBJ"/*.o
+  ranlib "$OUT/libSDL2.a" 2>/dev/null || true
+fi
 echo "=== libSDL2.a: $OUT/libSDL2.a ($(du -h "$OUT/libSDL2.a" | cut -f1)) ==="
 echo "=== main symbol present? ==="
 "$TC/toolchain/bin/arm-apple-darwin11-nm" "$OUT/libSDL2.a" 2>/dev/null | grep -E " T _main$" | head || echo "(nm check skipped)"

@@ -43,6 +43,30 @@ EOF
 done
 echo "[SDK] re-export stubs ok"
 
+# The theos iOS 9.3 SDK's libsystem_c.tbd stub omits a number of standard C
+# string/mem symbols (_strchr, _strcmp, _strncmp, _memcpy, _memcmp, ...) even
+# though the real on-device libSystem exports them. Shared libraries tolerate
+# the resulting undefineds, but the first *executable* (the launcher) fails to
+# link. Append a supplementary export block with the missing libc symbols.
+libc_tbd="$sdk/usr/lib/system/libsystem_c.tbd"
+if [ -e "$libc_tbd" ] && ! grep -q "_strchr" "$libc_tbd"; then
+  python3 - "$libc_tbd" <<'PYEOF'
+import sys, re
+p = sys.argv[1]
+txt = open(p).read()
+extra = ("  - archs:              [ armv7, armv7s, arm64, i386, x86_64 ]\n"
+         "    symbols:            [ _strchr, _strcmp, _strncmp, _strcasecmp, _strncasecmp,\n"
+         "                          _strlen, _strcpy, _strncpy, _strcat, _strncat, _strstr, _strrchr,\n"
+         "                          _memcpy, _memmove, _memset, _memcmp, _memchr, _bcmp, _bcopy, _bzero, _index, _rindex ]\n")
+# insert right after the first "exports:\n" line
+idx = txt.index("exports:\n") + len("exports:\n")
+txt = txt[:idx] + extra + txt[idx:]
+open(p, "w").write(txt)
+print("[SDK] patched libsystem_c.tbd with standard libc symbols")
+PYEOF
+fi
+echo "[SDK] libc symbol stub ok"
+
 echo "=========== STAGE 2: libBlocksRuntime ==========="
 dpkg -l | grep -q libblocksruntime-dev || apt-get install -y libblocksruntime-dev 2>&1 | tail -1 || true
 echo "blocks: $(dpkg -l | grep -i blocksruntime-dev | awk '{print $3}' | head -1)"
