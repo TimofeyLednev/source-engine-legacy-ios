@@ -431,6 +431,10 @@ def check_deps(conf):
 			conf.env.FRAMEWORK_UIKIT = "UIKit"
 			conf.env.FRAMEWORK_CFNETWORK = "CFNetwork"
 			conf.env.FRAMEWORK_SDL2 = "SDL2"
+			conf.env.FRAMEWORK_AVFOUNDATION = "AVFoundation"
+			# Objective-C runtime (objc_msgSend, autoreleasepool, ...) lives in
+			# libobjc on Apple platforms — it is a plain library, not a framework.
+			conf.env.LIB_OBJC = ["objc"]
 			if not conf.env.ANGLE:
 				conf.env.FRAMEWORK_OPENGLES = "OpenGLES"
 			else:
