@@ -35,9 +35,8 @@ def build(bld):
 		# SDL_uikitappdelegate.m) that boots UIApplicationMain and then calls
 		# the engine's SDL_main. The launcher_main SDL_uikit_main.c shim is for
 		# SDL 2.0.10+ (SDL_UIKitRunApp) and must NOT be compiled here.
-		# waf's uselib expansion does not reliably pick these up on the iOS
-		# cross build, so pass the frameworks + the Objective-C runtime
-		# (objc_msgSend, autoreleasepool, ...) + the static SDL2 lib directly.
+		# GameController must be weak-linked here so iOS 6 can launch even when
+		# the framework is absent; SDL2 itself stays unchanged.
 		linkflags += [
 			'-framework', 'Foundation',
 			'-framework', 'UIKit',
@@ -48,7 +47,7 @@ def build(bld):
 			'-framework', 'CoreAudio',
 			'-framework', 'AudioToolbox',
 			'-framework', 'CoreMotion',
-			'-framework', 'GameController',
+			'-weak_framework', 'GameController',
 			'-lobjc',
 		]
 		import os as _os
