@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -o pipefail
 # ios/setup_toolchain.sh -- build the Linux->iOS cross toolchain.
 # Downloads iOS SDK (9.3, still armv7-capable), builds libtapi,
 # apple-libdispatch, cctools-port (ld64/lipo/strip) and ldid.
@@ -101,11 +102,11 @@ echo "libdispatch: $(ls $TC/toolchain/lib/libdispatch.so 2>/dev/null || echo MIS
 if [ ! -f "$TC/toolchain/lib/libtapi.so" ] && [ ! -f "$TC/toolchain/lib/libtapi.dylib" ]; then
   echo "=========== STAGE 3b: libtapi ==========="
   rm -rf apple-libtapi
-  git clone --depth 1 https://github.com/tpoechtrager/apple-libtapi.git > /tmp/tapi_clone.log 2>&1
+  git clone --depth 1 https://github.com/tpoechtrager/apple-libtapi.git 2>&1 | tee /tmp/tapi_clone.log
   cd apple-libtapi
-  INSTALLPREFIX="$TC/toolchain" ./build.sh > /tmp/tapi_build.log 2>&1 \
+  INSTALLPREFIX="$TC/toolchain" ./build.sh 2>&1 | tee /tmp/tapi_build.log \
     || { echo "libtapi build FAILED"; tail -40 /tmp/tapi_build.log; exit 1; }
-  ./install.sh > /tmp/tapi_install.log 2>&1 || { echo "libtapi install FAILED"; tail -20 /tmp/tapi_install.log; exit 1; }
+  ./install.sh 2>&1 | tee /tmp/tapi_install.log || { echo "libtapi install FAILED"; tail -20 /tmp/tapi_install.log; exit 1; }
   cd "$TC"
 fi
 echo "libtapi: $(ls $TC/toolchain/lib/libtapi.* 2>/dev/null | head -1 || echo MISSING)"
