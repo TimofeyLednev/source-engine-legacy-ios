@@ -75,6 +75,10 @@ else
   ar rcs "$OUT/libSDL2.a" "$OBJ"/*.o
   ranlib "$OUT/libSDL2.a" 2>/dev/null || true
 fi
+
+echo "=== link flags note ==="
+echo "Use -weak_framework GameController (not -framework GameController) for iOS 6 support."
+echo "This keeps GCController available on iOS 7+ but doesn't hard-require the framework on iOS 6."
 echo "=== libSDL2.a: $OUT/libSDL2.a ($(du -h "$OUT/libSDL2.a" | cut -f1)) ==="
 echo "=== main symbol present? ==="
 "$TC/toolchain/bin/arm-apple-darwin11-nm" "$OUT/libSDL2.a" 2>/dev/null | grep -E " T _main$" | head || echo "(nm check skipped)"
