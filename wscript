@@ -185,8 +185,12 @@ def define_platform(conf):
 	conf.env.IOS = conf.options.IOS
 	conf.env.ANGLE = conf.options.ANGLE
 
-	arch32 = conf.run_test(CPP_32BIT_CHECK, 'Testing 32bit support')
-	arch64 = conf.run_test(CPP_64BIT_CHECK, 'Testing 64bit support')
+	if conf.env.IOS:
+		arch32 = True
+		arch64 = False
+	else:
+		arch32 = conf.run_test(CPP_32BIT_CHECK, 'Testing 32bit support')
+		arch64 = conf.run_test(CPP_64BIT_CHECK, 'Testing 64bit support')
 
 	if not (arch32 ^ arch64):
 		conf.fatal('Your compiler sucks')
