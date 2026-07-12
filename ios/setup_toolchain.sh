@@ -144,15 +144,15 @@ if [ ! -e "$SDLINC/SDL.h" ] || [ ! -d "$TC/SDL2-2.0.7/src" ]; then
 fi
 echo "SDL2 headers: $(ls $SDLINC/SDL.h 2>/dev/null || echo MISSING) (2.0.7, last with iOS 6.1)"
 # Cross-compile the static lib (idempotent; skips if already built).
-NBC_TOOLCHAIN="$TC" bash "$HERE/build_sdl2.sh" || { echo "libSDL2.a build FAILED"; exit 1; }
+NBC_TOOLCHAIN="$TC" bash "$HERE/build_sdl2.sh" 2>&1 | tee /tmp/sdl2_build.log || { echo "libSDL2.a build FAILED"; tail -40 /tmp/sdl2_build.log; exit 1; }
 echo "libSDL2.a: $(ls $TC/sdl2/lib/libSDL2.a 2>/dev/null || echo MISSING)"
 
 echo "=========== STAGE 4: ldid ==========="
 if [ ! -x toolchain/bin/ldid ]; then
   rm -rf ldid
-  git clone --depth 1 https://github.com/ProcursusTeam/ldid.git > /tmp/ldid_clone.log 2>&1
+  git clone --depth 1 https://github.com/ProcursusTeam/ldid.git 2>&1 | tee /tmp/ldid_clone.log
   cd ldid
-  make -j$(nproc) LDID_STATIC=1 > /tmp/ldid_make.log 2>&1 || make -j$(nproc) > /tmp/ldid_make.log 2>&1 \
+  make -j$(nproc) LDID_STATIC=1 2>&1 | tee /tmp/ldid_make.log || make -j$(nproc) 2>&1 | tee /tmp/ldid_make.log \
     || { echo "ldid make FAILED"; tail -40 /tmp/ldid_make.log; exit 1; }
   cp -f ldid "$TC/toolchain/bin/" 2>/dev/null || find . -name ldid -type f -executable -exec cp -f {} "$TC/toolchain/bin/" \;
   cd "$TC"
